@@ -1,0 +1,151 @@
+# Contrôles automatiques de MaisonFit.
+# Ils tournent à chaque envoi sur GitHub (push) et à chaque demande de fusion (pull request).
+# Si un contrôle échoue, la croix rouge apparaît sur GitHub et le changement ne doit pas être fusionné.
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  controles:
+    name: Contrôles (installation, lint, types, tests, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installer les dépendances
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install --no-audit --no-fund
+          fi
+
+      - name: Vérifier le style du code (lint)
+        run: |
+          if npm run | grep -qE '^  lint$'; then
+            npm run lint
+          else
+            echo "Pas de script lint, étape ignorée."
+          fi
+
+      - name: Vérifier les types (TypeScript)
+        run: |
+          if [ -f tsconfig.app.json ]; then
+            npx tsc --noEmit -p tsconfig.app.json
+          elif [ -f tsconfig.json ]; then
+            npx tsc --noEmit -p tsconfig.json
+          else
+            echo "Pas de TypeScript, étape ignorée."
+          fi
+
+      - name: Lancer les tests
+        run: |
+          if npm run | grep -qE '^  test$'; then
+            npm test
+          else
+            echo "Pas encore de tests, étape ignorée."
+          fi
+
+      - name: Construire l'appli (build)
+        run: npm run build
+
+      - name: Vérifier que le build a produit des fichiers
+        run: |
+          test -d dist && test -f dist/index.html
+          echo "Build OK : $(du -sh dist | cut -f1)"
+
+  test-appli:
+    name: Test de l'appli en vrai (ouverture dans un navigateur)
+    needs: controles
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installer et construire
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+          npm run build
+
+      - name: Installer un navigateur de test
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.49.1
+          npx playwright install --with-deps chromium
+
+      - name: Lancer l'appli à côté
+        run: |
+          npx vite preview --port 4173 --strictPort &
+          for i in $(seq 1 30); do curl -sf http://localhost:4173 >/dev/null && break; sleep 1; done
+          curl -sf http://localhost:4173 >/dev/null
+
+      - name: Ouvrir l'appli et vérifier qu'elle marche
+        run: |
+          cat > smoke.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          const erreurs = [];
+          const navigateur = await chromium.launch();
+          for (const [nom, taille] of [['telephone', { width: 390, height: 844 }], ['ordinateur', { width: 1280, height: 800 }]]) {
+            const page = await navigateur.newPage({ viewport: taille });
+            page.on('pageerror', e => erreurs.push(`[${nom}] ${e.message}`));
+            page.on('console', m => { if (m.type() === 'error') erreurs.push(`[${nom}] console : ${m.text()}`); });
+            const rep = await page.goto('http://localhost:4173', { waitUntil: 'networkidle' });
+            if (!rep || !rep.ok()) erreurs.push(`[${nom}] la page ne répond pas`);
+            await page.waitForTimeout(1500);
+            const texte = (await page.locator('body').innerText()).trim();
+            if (texte.length < 20) erreurs.push(`[${nom}] page blanche ou presque vide`);
+            await page.screenshot({ path: `capture-${nom}.png`, fullPage: true });
+            await page.close();
+          }
+          await navigateur.close();
+          if (erreurs.length) { console.error('Problèmes trouvés :\n' + erreurs.join('\n')); process.exit(1); }
+          console.log("L'appli s'ouvre sans erreur sur téléphone et ordinateur.");
+          EOF
+          node smoke.mjs
+
+      - name: Garder les captures d'écran
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: captures-appli
+          path: capture-*.png
+
+  securite:
+    name: Sécurité des dépendances
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Chercher les failles graves connues
+        run: |
+          if [ -f package-lock.json ]; then
+            npm audit --omit=dev --audit-level=critical
+          else
+            npm install --package-lock-only --no-audit --no-fund
+            npm audit --omit=dev --audit-level=critical
+          fi

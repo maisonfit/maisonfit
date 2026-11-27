@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MaisonFit prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,600;1,6..96,500&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE fashion house app for everyone: calm, confident, editorial
+   IDEA the morning flat-lay a stylist lays on your bed, shot like a lookbook
+   PICTURE today's outfit as one large flat-lay canvas, pieces placed and shadowed like a product shoot
+   COLOUR black field, white app, warm grey studio backdrop, black ink, blush as the only accent
+   TYPE Bodoni Moda for titles + Manrope for interface
+   LAYOUT phone-sized app centred on black; full screen on a phone */
+:root{color-scheme:light;--field:#0d0d0d;--ink:#0e0e0e;--mut:#8a857f;--line:#ebe8e4;--studio:#f3f1ee;--studio2:#e9e5e0;--blush:#d8c8b0;--ok:#1f7a4d;--paper:#fff}
+:root[data-mode=dark]{color-scheme:dark;--ink:#f3efe9;--mut:#958f88;--line:#34312e;--studio:#2a2826;--studio2:#34312e;--paper:#0f0f10;--ok:#4fbf86}
+:root[data-mode=dark] .phone{box-shadow:0 0 0 1px #2b2927}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--field);color:var(--ink);font:15px/1.5 Manrope,system-ui,sans-serif;overflow-x:clip;display:flex;flex-direction:column;align-items:center;padding:28px 16px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.phone{width:min(100%,410px);background:var(--paper);border-radius:46px;border:9px solid #1e1e1e;box-shadow:0 0 0 1px #333,0 40px 80px -30px rgba(0,0,0,.8);overflow:hidden;display:flex;flex-direction:column;min-height:min(860px,calc(100vh - 80px));position:relative}
+.cap{color:#8f8a85;font-size:13px;margin:14px 0 0;text-align:center}
+.status{display:flex;justify-content:space-between;align-items:center;padding:12px 26px 2px;font-weight:700;font-size:14px}
+.screen{flex:1;overflow:auto;padding:6px 20px 20px;display:flex;flex-direction:column;gap:16px}
+.screen>*{flex:none}
+.brandbar{display:flex;justify-content:space-between;align-items:center;padding-top:4px}
+.logo{display:flex;align-items:center;gap:10px;font:500 17px/1 'Bodoni Moda',serif;letter-spacing:.3em}
+.lm{width:34px;height:34px;border-radius:9px;background:#d8c8b0;padding:4px;display:grid;place-items:center}
+.date{font-size:13px;color:var(--mut)}
+h1{font:500 34px/1.04 'Bodoni Moda',serif;letter-spacing:-.015em;margin:0;text-wrap:balance}
+h1 em{font-style:italic}
+h2{font:500 22px/1.15 'Bodoni Moda',serif;margin:0}
+.sub{color:var(--mut);margin:0;font-size:14px}
+.notif{background:rgba(28,28,30,.86);backdrop-filter:blur(14px);color:#fff;border-radius:22px;padding:12px 14px;display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:12px;align-items:center;animation:drop .7s cubic-bezier(.2,.8,.2,1)}
+.notif .ic{width:38px;height:38px;border-radius:10px;background:#d8c8b0;display:grid;place-items:center;padding:4px}
+.notif b{display:block;font-size:14px;font-weight:700}
+.notif small{opacity:.78;font-size:13px;line-height:1.35;display:block}
+.notif time{font-size:12px;opacity:.6;align-self:start}
+@keyframes drop{from{transform:translateY(-28px);opacity:0}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){.notif,.sheet{animation:none}}
+.ctx{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ctx label{padding:8px 0;display:flex;flex-direction:column}
+.ctx label+label{border-left:1px solid var(--line);padding-left:14px}
+.ctx span{font-size:12px;color:var(--mut)}
+.ctx select{border:0;background:transparent;font-weight:700;font-size:15px;padding:0;min-height:28px;appearance:none;-webkit-appearance:none}
+.canvas{position:relative;aspect-ratio:1/1.12;border-radius:26px;background:radial-gradient(120% 90% at 30% 20%,var(--studio),var(--studio2));overflow:hidden}
+.canvas .p{position:absolute;border:0;background:none;padding:0}
+.canvas .p svg{width:100%;height:auto;display:block;filter:drop-shadow(0 14px 14px rgba(60,40,20,.18)) drop-shadow(0 2px 2px rgba(60,40,20,.12))}
+.canvas .s-top{left:4%;top:3%;width:56%}
+.canvas .s-bottom{left:8%;top:43%;width:50%}
+.canvas .s-shoes{right:5%;bottom:4%;width:36%}
+.canvas .s-outer{right:2%;top:4%;width:46%;transform:rotate(7deg)}
+.canvas.noout .s-top{left:22%;width:56%}
+.canvas.noout .s-bottom{left:6%}
+.canvas .lbl{position:absolute;left:16px;bottom:14px;background:var(--paper);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700}
+.list{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.lrow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;border-bottom:1px solid var(--line)}
+.lrow>button:first-child{border-bottom:0 !important}
+.list .swapb{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;padding:6px 14px;min-height:36px;font-weight:700;font-size:13px;background:var(--paper)}
+.list .addpiece{display:flex;justify-content:center;font-weight:700;font-size:14px;color:var(--ink)}
+.list button{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;border:0;border-bottom:1px solid var(--line);background:none;padding:8px 0;text-align:left;min-height:56px}
+.list .th{width:44px;height:44px;border-radius:10px;background:var(--studio);display:grid;place-items:center}
+.list .th svg{width:36px;height:36px}
+.list small{color:var(--mut)}
+.why{font-size:14px;color:var(--mut);margin:0;font-style:italic;font-family:'Bodoni Moda',serif;font-size:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>button{flex:1 1 140px}
+.btn{min-height:52px;border-radius:999px;border:0;font-weight:700;padding:12px 18px;background:var(--ink);color:var(--paper);font-size:15px}
+.btn.acc{background:var(--ink)}
+.btn.ghost{background:var(--paper);color:var(--ink);border:1.5px solid var(--ink)}
+.btn.soft{background:var(--blush);color:var(--ink)}
+.btn:disabled{opacity:.45}
+.done{background:var(--studio);border-radius:16px;padding:12px 14px;font-size:14px}
+.cnt{font-size:12px;color:var(--mut);text-align:center;margin:0}
+.tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border-top:1px solid var(--line);background:var(--paper);padding-bottom:6px}
+.tabs button{border:0;background:none;padding:12px 2px 10px;color:#b0aba5;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:52px}
+.tabs button[aria-current=true]{color:var(--ink)}
+.tabs svg{width:25px;height:25px}
+.tripcard{display:flex;align-items:center;gap:12px;width:100%;border:0;background:var(--studio);border-radius:18px;padding:12px 14px;text-align:left;margin:4px 0 10px}
+.tripcard .ic{width:44px;height:44px;border-radius:50%;background:var(--acc,#d8c8b0);display:grid;place-items:center;flex:none}
+.tripcard .ic svg{width:24px;height:24px}
+.tripcard b{display:block;font-size:15px}.tripcard small{color:var(--mut);font-size:13px}
+.tripcard>span:nth-child(2){flex:1}.tripcard .ar{font-size:24px;color:var(--mut)}
+.tin{width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;font:600 16px Manrope,system-ui,sans-serif;background:var(--paper);color:var(--ink);min-height:48px}
+.tin:focus{outline:2px solid var(--ink);outline-offset:1px}
+.tdates{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.tdates label{display:flex;flex-direction:column}
+.twx{display:flex;align-items:center;gap:12px;background:var(--studio);border-radius:16px;padding:12px 14px;margin:12px 0 2px}
+.twx .src{display:block;font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--ink);opacity:.6;margin-top:3px}
+.twx b{display:block;font-size:15px}.twx small{color:var(--mut);font-size:13px}
+.stp{display:inline-flex;align-items:center;gap:14px;border:1.5px solid var(--line);border-radius:999px;padding:4px}
+.stp button{width:36px;height:36px;border-radius:50%;border:0;background:var(--studio);font-size:20px;font-weight:700}
+.stp b{min-width:70px;text-align:center}
+.pbar{height:6px;border-radius:3px;background:var(--studio);overflow:hidden;margin:-4px 0 12px}.pbar i{display:block;height:100%;background:var(--ink);transition:width .25s}
+.pk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pk button{position:relative;border:1.5px solid var(--line);background:var(--paper);border-radius:14px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;font-weight:700;min-height:44px}
+.pk button svg{width:100%;height:56px}
+.pk button[aria-pressed=true]{background:var(--studio);border-color:var(--ink)}
+.pk button[aria-pressed=true] svg{opacity:.45}
+.pk em,.ess em{font-style:normal;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px;background:var(--paper);flex:none}
+.pk em{position:absolute;top:6px;right:6px}
+.pk button[aria-pressed=true] em,.ess button[aria-pressed=true] em{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.ess{display:flex;flex-direction:column;gap:2px}
+.ess button{display:flex;align-items:center;gap:10px;border:0;border-bottom:1px solid var(--line);background:none;padding:10px 2px;font-size:14px;text-align:left;min-height:44px}
+.ess button[aria-pressed=true] span{text-decoration:line-through;color:var(--mut)}
+.mdot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:7px;vertical-align:-2px;border:1.5px solid #8a857f}.mdot.light{background:#fff}.mdot.dark{background:#0e0e0e}
+.tuto{text-align:center;padding:6px 4px 2px}
+.tuto .ic{width:76px;height:76px;border-radius:50%;background:var(--acc,#d8c8b0);display:grid;place-items:center;margin:4px auto 14px;color:var(--ink)}
+.tuto .ic svg{width:34px;height:34px}
+.tuto .ic .av{width:52px!important;height:52px!important}
+.tuto h2{font-family:'Bodoni Moda',serif;font-size:26px;margin:0 0 6px}
+.tuto p{margin:0 auto;max-width:280px;color:#6b665f;font-size:15px;line-height:1.45}
+.tuto .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9a948c;font-weight:700;margin-bottom:6px}
+.dots{display:flex;gap:6px;justify-content:center;margin:16px 0 14px}
+.dots i{width:6px;height:6px;border-radius:3px;background:#ddd7cf;transition:width .2s}
+.dots i.on{width:18px;background:var(--ink)}
+.trow{display:flex;gap:10px}.trow .btn{flex:1}
+.filt{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.filt button{flex:none;border:1.5px solid var(--line);background:var(--paper);border-radius:999px;padding:7px 15px;font-weight:700;font-size:13px;min-height:38px}
+.filt button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 10px}
+.piece{background:none;border:0;padding:0;display:flex;flex-direction:column;gap:6px;text-align:left}
+.piece .ph{background:radial-gradient(100% 80% at 30% 20%,var(--studio),var(--studio2));border-radius:18px;aspect-ratio:4/5;display:grid;place-items:center;width:100%}
+.piece .ph svg{width:74%;height:auto;filter:drop-shadow(0 10px 10px rgba(60,40,20,.16))}
+.piece b{font-size:13px;font-weight:700;line-height:1.25}
+.piece small{font-size:12px;color:var(--mut);margin-top:-4px}
+.add{border:1.5px dashed #cfcac4;background:var(--paper);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-weight:700;color:var(--mut);aspect-ratio:4/5}
+.add span{font:400 36px/1 'Bodoni Moda',serif;color:var(--ink)}
+.ov{position:absolute;inset:0;background:rgba(10,10,10,.45);display:flex;align-items:flex-end;z-index:5}
+.sheet{background:var(--paper);border-radius:30px 30px 0 0;width:100%;max-height:90%;overflow:auto;padding:22px 20px;display:flex;flex-direction:column;gap:14px;animation:up .3s cubic-bezier(.2,.8,.2,1)}
+.sheet:before{content:"";width:40px;height:4px;border-radius:4px;background:var(--line);align-self:center;margin-top:-10px}
+@keyframes up{from{transform:translateY(50px)}to{transform:none}}
+.hero{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;align-items:center}
+.mini{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none}
+.mini .piece{flex:none;width:92px}
+.mini .piece .ph{border-radius:14px}
+.olist{display:flex;flex-direction:column;gap:10px}
+.outfit{background:radial-gradient(100% 80% at 30% 20%,var(--studio),var(--studio2));border-radius:18px;padding:10px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:4px;align-items:center}
+.outfit svg{width:100%;height:58px;filter:drop-shadow(0 6px 6px rgba(60,40,20,.15))}
+.heart{border:0;background:var(--paper);border-radius:50%;width:44px;height:44px;font-size:18px}
+.stat{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:12px 0}
+.stat b{font:500 30px 'Bodoni Moda',serif;white-space:nowrap}
+.warn{background:var(--blush);border-radius:16px;padding:12px 14px;font-size:14px}
+.big{font:500 64px/1 'Bodoni Moda',serif}
+.cand{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.cand .piece .ph{border:1.5px solid transparent;border-radius:14px}
+.cand .piece[aria-pressed=true] .ph{border-color:var(--ink)}
+.cand .piece small{margin-top:0}
+.offer{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 10px;text-align:left;border:1.5px solid var(--line);background:var(--paper);border-radius:18px;padding:14px 16px;width:100%}
+.offer.best{border-color:var(--ink)}
+.offer small{color:var(--mut);grid-column:1}
+.offer .pr{grid-row:1/3;grid-column:2;font:500 24px 'Bodoni Moda',serif;white-space:nowrap}
+.tag{background:var(--blush);border-radius:999px;padding:1px 8px;font-size:11px;margin-left:6px}
+.blur{filter:blur(7px);pointer-events:none;user-select:none}
+.note{font-size:12px;color:var(--mut);margin:0}
+form.addf{display:grid;gap:10px}
+form.addf select,form.addf input{border:1.5px solid var(--line);border-radius:14px;padding:12px;font-size:16px;width:100%;min-height:48px;background:var(--paper)}
+.sw{display:flex;flex-wrap:wrap;gap:10px}
+.sw button{width:36px;height:36px;border-radius:50%;border:3px solid var(--paper);box-shadow:0 0 0 1.5px var(--line)}
+.sw button[aria-pressed=true]{box-shadow:0 0 0 2px var(--ink)}
+.voice{display:flex;flex-direction:column;gap:2px;text-align:left;border:1.5px solid var(--line);background:var(--paper);border-radius:18px;padding:12px 14px;width:100%}
+.voice[aria-pressed=true]{border-color:var(--ink);background:var(--studio)}
+.voice small{color:var(--mut);font-size:12px}
+.voice .vq{font:italic 500 15px/1.35 'Bodoni Moda',serif;margin-top:4px}
+.nlook{grid-column:2/4;display:flex;gap:4px;margin-top:2px}
+.nlook span{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.12);display:grid;place-items:center}
+.nlook svg{width:32px;height:32px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--studio);border-radius:999px;padding:4px}
+.seg button{border:0;background:none;border-radius:999px;font-weight:800;font-size:13px;min-height:38px}
+.seg button[aria-pressed=true]{background:var(--paper);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.stories{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.story{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:none;font-size:12px;font-weight:700;width:64px}
+.ring{width:60px;height:60px;border-radius:50%;padding:3px;background:conic-gradient(var(--ink),#c9a39a,var(--ink))}
+.ring.add{background:none;border:1.5px dashed #bbb;display:grid;place-items:center;font:400 28px 'Bodoni Moda',serif}
+.av{width:100%;height:100%;border-radius:50%;border:2px solid var(--paper);display:grid;place-items:center;color:var(--paper);font:600 20px 'Bodoni Moda',serif}
+.post{border-bottom:1px solid var(--line);padding-bottom:14px;display:flex;flex-direction:column;gap:10px}
+.ph2{display:flex;align-items:center;gap:10px}
+.ph2 .av{width:38px;height:38px;border:0;font-size:16px;flex:none}
+.ph2 small{color:var(--mut);display:block;font-size:12px}
+.ph2 .more{margin-left:auto;border:0;background:none;font-size:18px;color:var(--mut);width:36px;height:36px}
+.post .canvas{aspect-ratio:1/1}
+.cap2{margin:0;font-size:14px}
+.reacts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.reacts button{border:1.5px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-weight:700;font-size:13px;min-height:36px}
+.reacts button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.vs{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center}
+.vs .canvas{aspect-ratio:3/4}
+.vs b.v{font:italic 500 22px 'Bodoni Moda',serif}
+.who{text-align:center;font-weight:800;font-size:13px;margin-top:4px}
+.frow{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:8px 0}
+.frow .av{width:44px;height:44px;border:0;font-size:18px}
+.frow small{display:block;color:var(--mut);font-size:12px}
+.frow button{border:1.5px solid var(--ink);background:var(--paper);border-radius:999px;padding:6px 14px;font-weight:800;font-size:13px;min-height:36px}
+.frow button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.glist{display:flex;flex-direction:column}
+.gitem{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;border:0;border-bottom:1px solid var(--line);background:none;padding:10px 0;text-align:left;width:100%}
+.gav{width:52px;height:52px;border-radius:16px;background:var(--studio);display:grid;place-items:center}
+.gav svg{width:42px;height:42px}
+.gitem small{display:block;color:var(--mut);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gitem .nb{background:var(--ink);color:var(--paper);border-radius:999px;font-size:11px;font-weight:800;padding:2px 8px}
+.chathead{display:flex;align-items:center;gap:10px}
+.chathead button{border:0;background:none;font-size:24px;width:40px;height:40px}
+.chathead small{display:block;color:var(--mut);font-size:12px}
+.chat{display:flex;flex-direction:column;gap:10px}
+.msg{display:flex;gap:8px;align-items:flex-end;max-width:88%}
+.msg .av{width:30px;height:30px;border:0;font-size:13px;flex:none}
+.msg.me{align-self:flex-end;flex-direction:row-reverse}
+.bub{background:var(--studio);border-radius:18px 18px 18px 6px;padding:8px 12px;font-size:14px;display:flex;flex-direction:column;gap:6px}
+.msg.me .bub{background:var(--ink);color:var(--paper);border-radius:18px 18px 6px 18px}
+.bub .nm{font-size:11px;font-weight:800;color:var(--mut)}
+.msg.me .bub .nm{display:none}
+.haul{background:var(--paper);border-radius:14px;overflow:hidden;color:var(--ink);width:210px}
+.haul .hp{background:radial-gradient(100% 80% at 30% 20%,var(--studio),var(--studio2));display:grid;place-items:center;height:130px}
+.haul .hp svg{width:110px;height:110px;filter:drop-shadow(0 8px 8px rgba(60,40,20,.18))}
+.haul .hb{padding:8px 10px}
+.haul .hb b{display:block;font-size:13px}
+.haul .hb small{color:var(--mut);font-size:12px}
+.haul .hb .pr{float:right;font:500 16px 'Bodoni Moda',serif}
+.qr{display:flex;gap:6px;flex-wrap:wrap}
+.qr button{border:1.5px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;min-height:32px;color:var(--ink)}
+.sysm{align-self:center;background:var(--blush);border-radius:14px;padding:8px 12px;font-size:13px;max-width:92%}
+.comp{position:sticky;bottom:-20px;background:var(--paper);display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:8px;padding:10px 0 4px;border-top:1px solid var(--line)}
+.comp input{border:1.5px solid var(--line);border-radius:999px;padding:10px 14px;font-size:16px;min-height:44px}
+.comp button{border:0;border-radius:50%;width:44px;height:44px;background:var(--ink);color:var(--paper);font-size:18px}
+.comp button.plus2{background:var(--studio);color:var(--ink);font:400 24px 'Bodoni Moda',serif}
+.typing{font-size:12px;color:var(--mut);font-style:italic}
+.flame{font-size:11px;font-weight:800;margin-top:-2px;white-space:nowrap}
+.ring.seen{background:#d9d4ce}
+.ring.mine{background:conic-gradient(#d8c8b0,#0e0e0e,#d8c8b0)}
+.ring .plusb{position:absolute;right:-2px;bottom:-2px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--paper);border:2px solid var(--paper);display:grid;place-items:center;font-size:14px;font-weight:800}
+.ring{position:relative}
+.sv{position:absolute;inset:0;background:#0e0e0e;z-index:8;display:flex;flex-direction:column;color:#fff;padding:14px 14px 16px;gap:10px}
+.sv .bars{display:flex;gap:4px}
+.sv .bars i{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.3)}
+.sv .bars i.on{background:#fff}
+.sv .sh{display:flex;align-items:center;gap:10px}
+.sv .sh .av{width:34px;height:34px;border:0;font-size:14px}
+.sv .sh small{opacity:.7;font-size:12px;display:block}
+.sv .x{margin-left:auto;border:0;background:none;color:#fff;font-size:22px;width:40px;height:40px}
+.sv .stage{flex:1;position:relative;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.sv .canvas{aspect-ratio:1/1.05}
+.sv .tapl,.sv .tapr{position:absolute;top:0;bottom:0;width:35%;border:0;background:none;z-index:2}
+.sv .tapl{left:0}.sv .tapr{right:0}
+.sv .scap{font:italic 500 20px/1.25 'Bodoni Moda',serif;text-align:center;margin:0}
+.sv .sfoot{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}
+.sv .sfoot input{border:1.5px solid rgba(255,255,255,.4);background:transparent;color:#fff;border-radius:999px;padding:10px 14px;font-size:16px;min-height:44px}
+.sv .sfoot button{border:0;background:none;font-size:24px;width:44px;height:44px}
+.sv .sinfo{background:rgba(255,255,255,.1);border-radius:14px;padding:8px 12px;font-size:13px;text-align:center}
+.streakbox{background:var(--studio);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.streakbox b{font:500 22px 'Bodoni Moda',serif}
+.seg3{grid-template-columns:repeat(3,1fr)}
+.namebtn{border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.fol{margin-left:auto;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:999px;padding:5px 14px;font-weight:800;font-size:12px;min-height:32px}
+.fol[aria-pressed=true]{background:var(--paper);color:var(--ink)}
+.creators{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none}
+.creator{flex:none;width:132px;border:1.5px solid var(--line);border-radius:18px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;background:var(--paper)}
+.creator .av{width:56px;height:56px;border:0;font-size:22px}
+.creator small{color:var(--mut);font-size:12px}
+.prof{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.prof .av{width:84px;height:84px;border:0;font-size:34px}
+.counts{display:grid;grid-template-columns:repeat(3,1fr);width:100%;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px 0}
+.counts b{display:block;font:500 22px 'Bodoni Moda',serif}
+.counts small{color:var(--mut);font-size:12px}
+.pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;width:100%}
+.pgrid .canvas{aspect-ratio:3/4;border-radius:12px}
+.pf{display:flex;gap:8px}
+.pf button{flex:1;border:1.5px solid var(--line);background:var(--paper);border-radius:16px;padding:10px;font-weight:800;font-size:14px;text-align:left;min-height:56px}
+.pf button small{display:block;font-weight:500;color:var(--mut);font-size:12px}
+.pf button[aria-pressed=true]{border-color:var(--ink);background:var(--studio)}
+.toggle{display:flex;justify-content:space-between;align-items:center;width:100%;border-bottom:1px solid var(--line);padding:10px 0;text-align:left}
+.toggle button{border:0;width:52px;height:30px;border-radius:999px;background:#d9d4ce;position:relative}
+.toggle button:after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--paper);transition:left .15s}
+.toggle button[aria-pressed=true]{background:var(--ink)}
+.toggle button[aria-pressed=true]:after{left:25px}
+.bub img{max-width:220px;width:100%;border-radius:12px;display:block}
+.bub .canvas{width:210px;aspect-ratio:1/1}
+.attach{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.attach label,.attach button{border:1.5px solid var(--line);background:var(--paper);border-radius:18px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:800;font-size:13px;cursor:pointer;text-align:center;min-height:96px}
+.attach svg{width:30px;height:30px}
+.attach input{position:absolute;width:1px;height:1px;opacity:0}
+.gsel{display:flex;flex-wrap:wrap;gap:8px}
+.gsel button{border:1.5px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;font-weight:700;min-height:38px;display:flex;align-items:center;gap:6px}
+.gsel button .av{width:24px;height:24px;border:0;font-size:11px}
+.gsel button[aria-pressed=true]{border-color:var(--ink);background:var(--studio)}
+.cms{display:flex;flex-direction:column;gap:10px}
+.cm{display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;align-items:start}
+.cm .av{width:32px;height:32px;border:0;font-size:13px}
+.cm p{margin:0;font-size:14px}
+.cm small{color:var(--mut);font-size:12px}
+.cm.auth p b:after{content:" · auteur";font-weight:500;color:var(--mut);font-size:12px}
+.refs{background:var(--studio);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.ref{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center}
+.ref .th{width:40px;height:40px;border-radius:10px;background:var(--paper);display:grid;place-items:center}
+.ref .th svg{width:32px;height:32px}
+.ref small{display:block;color:var(--mut);font-size:12px}
+.ref .pr{font:500 16px 'Bodoni Moda',serif;white-space:nowrap}
+.refpill{position:absolute;right:12px;bottom:12px;background:var(--paper);border:0;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:800;z-index:2}
+.cmf{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px}
+.cmf input{border:1.5px solid var(--line);border-radius:999px;padding:10px 14px;font-size:16px;min-height:44px}
+.cmf button{border:0;border-radius:50%;width:44px;height:44px;background:var(--ink);color:var(--paper);font-size:18px}
+.sheet>*{flex:none}
+.cpick{width:36px;height:36px;border-radius:50%;background:conic-gradient(#e6b8a2,#f1d9d3,#d9cfe8,#c9d6e3,#c8e6d6,#d8c8b0,#e6b8a2);box-shadow:0 0 0 1.5px var(--line);position:relative;overflow:hidden;cursor:pointer}
+.cpick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.gcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.gcard{border:1.5px solid var(--line);background:var(--paper);border-radius:18px;padding:10px 6px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:13px}
+.gcard .gpics{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:2px;width:100%;background:radial-gradient(100% 80% at 30% 20%,var(--studio),var(--studio2));border-radius:12px;padding:6px}
+.gcard .gpics svg{width:100%;height:46px;filter:drop-shadow(0 4px 4px rgba(60,40,20,.15))}
+.gcard .gpics svg:last-child{grid-column:1/3;height:34px}
+.gcard[aria-pressed=true]{border-color:var(--ink);box-shadow:0 0 0 1.5px var(--ink)}
+.tabav{width:24px;height:24px;border-radius:50%;display:block;box-shadow:0 0 0 1.5px transparent}
+.tabs button[aria-current=true] .tabav{box-shadow:0 0 0 2px var(--ink)}
+.tabav .av{display:block}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{background:var(--studio);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700}
+.acc-top{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center}
+.acc-top .counts{text-align:center}
+.hlc{width:100%;height:100%;border:2px solid var(--paper);background:var(--studio) !important;padding:6px}
+.hlc svg{width:100%;height:100%}
+.demo{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)}
+.demo button{border:1.5px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 10px;font-weight:700;font-size:12px;min-height:32px}
+.demo button[aria-pressed=true]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.notif .act{grid-column:2/4;display:flex;gap:8px;margin-top:4px}
+.notif .act button{border:0;border-radius:999px;padding:7px 14px;font-weight:700;font-size:13px;background:#fff;color:#0e0e0e;min-height:34px}
+.notif .act button+button{background:rgba(255,255,255,.16);color:#fff}
+.hours{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;text-align:center;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 0}
+.hours div{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--mut);border-radius:12px;padding:4px 0}
+.hours div.now{background:var(--studio);color:var(--ink);font-weight:700}
+.hours svg{width:26px;height:26px}
+.hours b{color:var(--ink);font-size:14px}
+.streak{display:inline-flex;align-items:center;gap:6px;background:var(--blush);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800}
+.eve{border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:12px}
+.canvas.night{background:radial-gradient(120% 90% at 30% 20%,#2b2a30,#151418)}
+.canvas.night .lbl{background:#0e0e0e;color:#fff;border:1px solid #444}
+.day{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:center;border-bottom:1px solid var(--line);padding:10px 0}
+.day .dn{font:500 22px/1 'Bodoni Moda',serif}
+.day .dn small{display:block;font:500 12px Manrope;color:var(--mut);margin-top:4px}
+.day .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.day .th{border:1.5px solid var(--line);background:var(--paper);border-radius:999px;padding:3px 10px;font-weight:700;font-size:12px;min-height:30px}
+.day .lk{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;background:var(--studio);border-radius:14px;padding:6px;margin-top:6px}
+.day .lk svg{width:100%;height:44px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.cal span{aspect-ratio:1;border-radius:8px;background:var(--studio)}
+.cal span.on{background:var(--ink)}
+.cal span.td{outline:2px solid var(--ink);outline-offset:1px}
+.day .lk.mine{background:var(--blush)}
+.mine-t{font-size:11px;font-weight:800;margin-top:4px;display:block}
+.day .ch{border:0;background:none;padding:0;width:100%;text-align:left}
+.pick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:4px;align-items:center;background:radial-gradient(100% 80% at 30% 20%,var(--studio),var(--studio2));border-radius:18px;padding:10px;border:1.5px solid transparent;width:100%}
+.pick svg{width:100%;height:58px}
+.pick span{font-weight:800;font-size:13px;padding:0 6px}
+.chg{font-size:12px;font-weight:800;color:#a14a3a}
+.piece.dirty .ph{opacity:.4}
+.dtag{font-size:11px;font-weight:800;color:#a14a3a}
+.plus{display:inline-block;background:var(--ink);color:var(--paper);border-radius:999px;padding:2px 10px;font-size:11px;font-weight:700}
+@media(max-width:440px){body{padding:0;background:var(--paper)}.phone{border:0;border-radius:0;min-height:100%;box-shadow:none}.cap{display:none}}
+</style>
+</head>
+<body>
+<div class="phone wrapP" id="phone">
+<div class="status"><span>7:30</span><span id="plusTag"></span></div>
+<main class="screen" id="screen"></main>
+<nav class="tabs" id="tabs"></nav>
+<div id="ov"></div>
+</div>
+<p class="cap">Prototype MaisonFit · vêtements dessinés en attendant les photos des utilisateurs</p>
+<script>
+{
+const MONO='<svg viewBox="0 0 100 100" aria-hidden="true" style="width:100%;height:100%"><path d="M50 37 C50 28 58.5 26 58.5 19 C58.5 12.5 53 9.5 48.5 10.5 C44.5 11.5 42.5 14.5 42.5 18" fill="none" stroke="#0e0e0e" stroke-width="7" stroke-linecap="round"/><path d="M50 36 L12 64 Q7 69 14 69 L86 69 Q93 69 88 64 Z" fill="#0e0e0e"/><path d="M50 47 L28 63 L72 63 Z" fill="#d8c8b0"/></svg>';
+const COLORS={blanc:'#f7f5f2',noir:'#1c1c1c',beige:'#d8c3a5',gris:'#9a9a9a',denim:'#4a6fa5',marron:'#7a4e2d',marine:'#1f2d4d',sauge:'#9caf88',ciel:'#a9c8ea',rose:'#f2a7b8',bordeaux:'#7b1e33',jaune:'#f2c94c'};
+const NEUTRAL=['blanc','noir','beige','gris','denim','marron','marine'];
+const FRIENDS=[['sauge','rose'],['ciel','beige'],['bordeaux','rose']];
+const ok2=(a,b)=>NEUTRAL.includes(a)||NEUTRAL.includes(b)||a===b||FRIENDS.some(p=>p.includes(a)&&p.includes(b));
+const CATS={top:'Hauts',bottom:'Bas',shoes:'Chaussures',outer:'Vestes'};
+const CAT1={top:'Haut',bottom:'Bas',shoes:'Chaussures',outer:'Veste'};
+const OCC={cours:['casual','chic'],date:['chic','soiree'],travail:['chic','casual'],soiree:['soiree','chic'],weekend:['casual','sport'],sport:['sport'],entretien:['chic'],voyage:['casual','sport']};
+const OCCN={cours:'Cours',date:'Date',travail:'Travail',soiree:'Soirée',weekend:'Week-end chill',sport:'Sport',entretien:'Entretien',voyage:'Voyage'};
+const STN={casual:'Décontracté',chic:'Chic',soiree:'Soirée',sport:'Sport'};
+const WEA={pluie:{t:12,r:1,n:'12°C, pluie'},doux:{t:17,r:0,n:'17°C, nuageux'},soleil:{t:20,r:0,n:'20°C, soleil'},froid:{t:3,r:0,n:'3°C, froid sec'}};
+let uid=100;
+const I=(cat,shape,name,col,st,w=1,rain=0)=>({id:uid++,cat,shape,name,col,st,w,rain,worn:Math.floor(Math.random()*9)});
+const START=[
+I('top','tee','T-shirt blanc','blanc',['casual','sport']),I('top','tee','T-shirt noir','noir',['casual']),I('top','pull','Pull beige','beige',['casual','chic'],2),I('top','pull','Pull sauge','sauge',['casual'],2),
+I('top','shirt','Chemise blanche','blanc',['chic','soiree','casual']),I('top','shirt','Chemise ciel','ciel',['chic','casual']),I('top','cami','Top satin noir','noir',['soiree']),I('top','tee','T-shirt sport gris','gris',['sport']),
+I('bottom','jean','Jean bleu','denim',['casual','chic']),I('bottom','jean','Jean noir','noir',['casual','chic','soiree']),I('bottom','pant','Pantalon beige','beige',['chic','casual']),I('bottom','skirt','Jupe noire','noir',['soiree','chic']),I('bottom','pant','Jogging gris','gris',['sport']),
+I('shoes','sneak','Baskets blanches','blanc',['casual','sport']),I('shoes','boot','Bottines noires','noir',['casual','chic','soiree'],1,1),I('shoes','loaf','Mocassins marron','marron',['chic','casual']),
+I('outer','coat','Trench beige','beige',['chic','casual'],2,1),I('outer','jacket','Veste en jean','denim',['casual'],1),I('outer','puffer','Doudoune noire','noir',['casual','sport'],3,1),I('outer','jacket','Blazer noir','noir',['chic','soiree'],1)];
+const START_H=[
+I('top','tee','T-shirt blanc','blanc',['casual','sport']),I('top','tee','Polo marine','marine',['casual','chic']),I('top','pull','Pull gris','gris',['casual','chic'],2),I('top','pull','Pull camel','beige',['casual','chic'],2),
+I('top','shirt','Chemise blanche','blanc',['chic','soiree','casual']),I('top','shirt','Chemise oxford ciel','ciel',['chic','casual']),I('top','tee','T-shirt noir','noir',['casual','soiree']),I('top','tee','T-shirt sport gris','gris',['sport']),
+I('bottom','jean','Jean brut','denim',['casual','chic']),I('bottom','jean','Jean noir','noir',['casual','chic','soiree']),I('bottom','pant','Chino beige','beige',['chic','casual']),I('bottom','pant','Pantalon de costume gris','gris',['chic','soiree']),I('bottom','pant','Jogging noir','noir',['sport']),
+I('shoes','sneak','Sneakers blanches','blanc',['casual','sport']),I('shoes','boot','Boots en cuir marron','marron',['casual','chic','soiree'],1,1),I('shoes','loaf','Mocassins noirs','noir',['chic','soiree']),
+I('outer','coat','Manteau camel','beige',['chic','casual'],2,1),I('outer','jacket','Surchemise kaki','sauge',['casual'],1),I('outer','puffer','Doudoune noire','noir',['casual','sport'],3,1),I('outer','jacket','Blazer marine','marine',['chic','soiree'],1)];
+const wardrobeFor=g=>{const src=g==='h'?START_H:g==='x'?[...START.filter((x,i)=>i%2===0),...START_H.filter((x,i)=>i%2===1)]:START;return src.map(x=>({...x,st:[...x.st]}));};
+const ACCENTS=[['Sable','#d8c8b0'],['Sauge','#c3ccb5'],['Glacier','#c9d6e3'],['Rose poudré','#f1d9d3'],['Lilas','#d9cfe8'],['Terracotta','#e6b8a2'],['Menthe','#c8e6d6'],['Perle','#dcdcd8']];
+const applyMode=()=>{try{document.documentElement.dataset.mode=S.mode==='dark'?'dark':'light';}catch(_){}};
+const applyAccent=()=>{applyMode();try{document.documentElement.style.setProperty('--blush',S.accent||'#d8c8b0');}catch(_){}};
+const LANGN={fr:'Français',en:'English',es:'Español',it:'Italiano',de:'Deutsch'};
+const OCCL={en:{cours:'class',date:'date',travail:'work',soiree:'night out',weekend:'chill weekend',sport:'sport',entretien:'interview',voyage:'travel'},es:{cours:'clase',date:'cita',travail:'trabajo',soiree:'fiesta',weekend:'finde tranqui',sport:'deporte',entretien:'entrevista',voyage:'viaje'},it:{cours:'lezione',date:'appuntamento',travail:'lavoro',soiree:'serata',weekend:'weekend relax',sport:'sport',entretien:'colloquio',voyage:'viaggio'},de:{cours:'Uni',date:'Date',travail:'Arbeit',soiree:'Party',weekend:'Chill-Wochenende',sport:'Sport',entretien:'Vorstellungsgespräch',voyage:'Reise'}};
+const LOOKT={en:a=>`Your <em>${a}</em> look of the day`,es:a=>`Tu look de <em>${a}</em> del día`,it:a=>`Il tuo look di oggi per <em>${a}</em>`,de:a=>`Dein <em>${a}</em>-Look des Tages`};
+const TRW={
+en:[[">Apparence<", ">Appearance<"],["</span>Blanc<", "</span>White<"],["</span>Noir<", "</span>Black<"],["Moyenne de saison · la météo en direct arrive avec la vraie appli", "Seasonal average · live weather comes with the real app"],["Destination non reconnue, vérifie l'orthographe", "Destination not recognised, check the spelling"],["Chargement de la météo en direct…", "Loading live weather…"],["Météo en direct", "Live weather"],["En direct jusqu'à 16 jours, puis moyenne de saison", "Live up to 16 days, then seasonal average"],["Météo en direct indisponible · moyenne de saison", "Live weather unavailable · seasonal average"],["Dis où tu pars et quand, MaisonFit regarde la météo sur place et fait ta valise.", "Tell us where and when. MaisonFit checks the weather there and packs your suitcase."],["placeholder=\"Ville ou pays\"", "placeholder=\"City or country\""],[">Aller<", ">Departure<"],[">Retour<", ">Return<"],[">Entre ", ">Between "],["°C et ", "°C and "],[" · pluie prévue ", " · rain expected "],[" · pas de pluie prévue", " · no rain expected"],[" jours</b>", " days</b>"],[" jour<", " day<"],["Écris ta destination et choisis tes dates.", "Type your destination and pick your dates."],[">Lun<br>", ">Mon<br>"],[">Mar<br>", ">Tue<br>"],[">Mer<br>", ">Wed<br>"],[">Jeu<br>", ">Thu<br>"],[">Ven<br>", ">Fri<br>"],[">Sam<br>", ">Sat<br>"],[">Dim<br>", ">Sun<br>"],["‹ Retour à ma semaine", "‹ Back to my week"],["Ma <em>valise</em>", "My <em>suitcase</em>"],["Dis où tu pars, MaisonFit prépare tes looks selon la météo sur place et la liste de ce qu'il faut emporter.", "Tell us where you're going. MaisonFit plans your looks for the local weather and lists what to pack."],[">Destination<", ">Destination<"],[">Durée<", ">Length<"],[">Sur place<", ">While there<"],["Refaire ma valise", "Repack my suitcase"],["Faire ma valise", "Pack my suitcase"],["Dans ta valise", "In your suitcase"],[" pièces · ", " pieces · "],[" rangées<", " packed<"],[">Les essentiels<", ">Essentials<"],[">Sous-vêtements<", ">Underwear<"],[">Chaussettes<", ">Socks<"],[">Pyjama<", ">Pyjamas<"],[">Trousse de toilette<", ">Toiletry bag<"],[">Chargeur<", ">Charger<"],[">Papiers d'identité<", ">ID / passport<"],[">Parapluie<", ">Umbrella<"],["Valise bouclée. Bon voyage !", "All packed. Have a great trip!"],["Tes looks jour par jour", "Your looks day by day"],["Tu pars en voyage ?", "Going on a trip?"],["MaisonFit prépare ta valise", "MaisonFit packs your suitcase"],[", pluie<", ", rain<"],[">Londres<", ">London<"],[">Barcelone<", ">Barcelona<"],[">Passer<", ">Skip<"],[">Suivant<", ">Next<"],[">C'est compris<", ">Got it<"],[">Revoir le tuto<", ">Replay the tour<"],[">Compte<", ">Profile<"],["Ton avatar", "Your avatar"],["Il porte ton look du jour, automatiquement.", "It wears your look of the day, automatically."],[">Peau<", ">Skin<"],[">Cheveux<", ">Hair<"],[">Couleur des cheveux<", ">Hair colour<"],[">Accessoire<", ">Accessory<"],["C'est moi !", "That's me!"],["Stories à la une", "Highlights"],["Modifier le profil", "Edit profile"],["Partager le profil", "Share profile"],[">Mes looks<", ">My looks<"],[">Favoris<", ">Favourites<"],[">Stats<", ">Stats<"],[">Nouveau<", ">New<"],[">Réglages<", ">Settings<"],["<small>looks</small>", "<small>looks</small>"],["<small>abonnés</small>", "<small>followers</small>"],["<small>abonnements</small>", "<small>following</small>"],["Ton look <em>de ce midi</em>", "Your <em>lunchtime</em> look"],["Ton look <em>de cet après-midi</em>", "Your <em>afternoon</em> look"],["Ton look <em>de ce soir</em>", "Your <em>evening</em> look"],["Mon programme change, adapte mon look", "Change of plans? Adapt my look"],["Ton programme change ?", "Change of plans?"],["Adapter mon look", "Adapt my look"],["Garder mon look du jour", "Keep today's look"],[">Modifier<", ">Edit<"],[">Ce midi<", ">Lunchtime<"],[">Cet après-midi<", ">This afternoon<"],[">Ce soir<", ">Tonight<"],[">Quand<", ">When<"],[">Pour<", ">For<"],['>Changer<','>Swap<'],["Thème de l'appli","App theme"],['Bienvenue sur MaisonFit','Welcome to MaisonFit'],["Deux questions pour que l'appli te ressemble. Tu pourras tout changer dans les réglages.","A few questions so the app feels like you. You can change everything later in settings."],["Tu t'habilles plutôt…","You usually dress…"],['Mode femme','Womenswear'],['Mode homme','Menswear'],['Unisexe','Unisex'],['Ton style','Your style'],['Les couleurs que tu portes le plus','Colours you wear the most'],['Les couleurs que tu ne portes jamais','Colours you never wear'],["Ce que tu ne veux jamais qu'on te propose","Never suggest me"],["Ta couleur d'accent","Your accent colour"],["C'est parti","Let's go"],["MaisonFit s'adapte à tes goûts.",'MaisonFit adapts to your taste.'],['Ta langue','Your language'],
+['Pourquoi cette tenue →','Why this outfit →'],['Ce look te plaît ?','Like this look?'],['>Météo<','>Weather<'],['>Ressenti<','>Feels like<'],["J'ai souvent froid","I'm often cold"],["J'ai toujours chaud","I'm always warm"],['Je porte ce look','I wear this look'],['Autre look','Another look'],['♡ Ajouter à mes favoris','♡ Add to favourites'],['Ce soir je sors, adapte mon look',"I'm going out tonight, adapt my look"],['Ajouter à ma story 🔥','Add to my story 🔥'],["changement de look gratuit aujourd'hui",'free look change left today'],['Démo, heure','Demo, time'],['Autre notif','Other notif'],['Réglages notifs','Settings'],['Maint.','Now'],['+ Personnaliser','+ Customise'],['Série ','Streak '],[' jours',' days'],
+['Ta <em>semaine</em>','Your <em>week</em>'],["Choisis tes looks à l'avance. Si la météo change, MaisonFit te prévient la veille au soir.","Plan your looks ahead. If the weather changes, MaisonFit tells you the night before."],['Choisi par toi ✓ · modifier','Picked by you ✓ · edit'],['Proposé par MaisonFit · touche pour choisir','Suggested by MaisonFit · tap to choose'],['Ton journal de looks','Your look journal'],
+['Ma <em>garde-robe</em>','My <em>wardrobe</em>'],['♡ Favoris et stats','♡ Favourites & stats'],['Check shopping','Shopping check'],['>Tout<','>All<'],['>Hauts<','>Tops<'],['>Bas<','>Bottoms<'],['>Chaussures<','>Shoes<'],['>Vestes<','>Jackets<'],['>Haut<','>Top<'],['>Veste<','>Jacket<'],['Ajouter','Add'],
+['Le <em>social</em>','<em>Social</em>'],['>Amis<','>Friends<'],['>Abonnements<','>Following<'],['>Pour toi<','>For you<'],['Publier mon look','Post my look'],['Stylistes du moment','Trending stylists'],['>Suivre<','>Follow<'],['>Abonné<','>Following<'],[' abonnés',' followers'],['>Comparer<','>Compare<'],['Recréer avec mes vêtements','Recreate with my clothes'],['La réf stp 🙏','Where is it from? 🙏'],['Ta story','Your story'],['Garde tes flammes','Keep your flames'],
+['Mes <em>conversations</em>','My <em>chats</em>'],['Créer un groupe','Create a group'],
+["</svg>Aujourd'hui<",'</svg>Today<'],['</svg>Semaine<','</svg>Week<'],['</svg>Messages<','</svg>Chats<'],['</svg>Garde-robe<','</svg>Wardrobe<'],
+['>Cours<','>Class<'],['>Travail<','>Work<'],['>Soirée<','>Night out<'],['>Week-end chill<','>Chill weekend<'],['>Entretien<','>Interview<'],['>Voyage<','>Travel<'],
+['12°C, pluie','12°C, rain'],['17°C, nuageux','17°C, cloudy'],['20°C, soleil','20°C, sunny'],['3°C, froid sec','3°C, dry cold'],[' à Toulouse',' in Toulouse']],
+es:[[">Apparence<", ">Apariencia<"],["</span>Blanc<", "</span>Blanco<"],["</span>Noir<", "</span>Negro<"],["Moyenne de saison · la météo en direct arrive avec la vraie appli", "Media de temporada · el tiempo en directo llegará con la app real"],["Destination non reconnue, vérifie l'orthographe", "Destino no reconocido, revisa la ortografía"],["Chargement de la météo en direct…", "Cargando el tiempo en directo…"],["Météo en direct", "Tiempo en directo"],["En direct jusqu'à 16 jours, puis moyenne de saison", "En directo hasta 16 días, luego media de temporada"],["Météo en direct indisponible · moyenne de saison", "Tiempo en directo no disponible · media de temporada"],["Dis où tu pars et quand, MaisonFit regarde la météo sur place et fait ta valise.", "Dinos adónde y cuándo. MaisonFit mira el tiempo allí y hace tu maleta."],["placeholder=\"Ville ou pays\"", "placeholder=\"Ciudad o país\""],[">Aller<", ">Ida<"],[">Retour<", ">Vuelta<"],[">Entre ", ">Entre "],["°C et ", "°C y "],[" · pluie prévue ", " · lluvia prevista "],[" · pas de pluie prévue", " · sin lluvia prevista"],[" jours</b>", " días</b>"],[" jour<", " día<"],["Écris ta destination et choisis tes dates.", "Escribe tu destino y elige tus fechas."],[">Lun<br>", ">Lun<br>"],[">Mar<br>", ">Mar<br>"],[">Mer<br>", ">Mié<br>"],[">Jeu<br>", ">Jue<br>"],[">Ven<br>", ">Vie<br>"],[">Sam<br>", ">Sáb<br>"],[">Dim<br>", ">Dom<br>"],["‹ Retour à ma semaine", "‹ Volver a mi semana"],["Ma <em>valise</em>", "Mi <em>maleta</em>"],["Dis où tu pars, MaisonFit prépare tes looks selon la météo sur place et la liste de ce qu'il faut emporter.", "Dinos adónde vas. MaisonFit prepara tus looks según el tiempo allí y la lista de lo que llevar."],[">Destination<", ">Destino<"],[">Durée<", ">Duración<"],[">Sur place<", ">Allí<"],["Refaire ma valise", "Rehacer mi maleta"],["Faire ma valise", "Hacer mi maleta"],["Dans ta valise", "En tu maleta"],[" pièces · ", " prendas · "],[" rangées<", " guardadas<"],[">Les essentiels<", ">Lo esencial<"],[">Sous-vêtements<", ">Ropa interior<"],[">Chaussettes<", ">Calcetines<"],[">Pyjama<", ">Pijama<"],[">Trousse de toilette<", ">Neceser<"],[">Chargeur<", ">Cargador<"],[">Papiers d'identité<", ">Documentación<"],[">Parapluie<", ">Paraguas<"],["Valise bouclée. Bon voyage !", "Maleta lista. ¡Buen viaje!"],["Tes looks jour par jour", "Tus looks día a día"],["Tu pars en voyage ?", "¿Te vas de viaje?"],["MaisonFit prépare ta valise", "MaisonFit prepara tu maleta"],[", pluie<", ", lluvia<"],[">Londres<", ">Londres<"],[">Barcelone<", ">Barcelona<"],[">Passer<", ">Saltar<"],[">Suivant<", ">Siguiente<"],[">C'est compris<", ">Entendido<"],[">Revoir le tuto<", ">Ver el tutorial<"],[">Compte<", ">Perfil<"],["Ton avatar", "Tu avatar"],["Il porte ton look du jour, automatiquement.", "Lleva tu look del día, automáticamente."],[">Peau<", ">Piel<"],[">Cheveux<", ">Pelo<"],[">Couleur des cheveux<", ">Color de pelo<"],[">Accessoire<", ">Accesorio<"],["C'est moi !", "¡Soy yo!"],["Stories à la une", "Historias destacadas"],["Modifier le profil", "Editar perfil"],["Partager le profil", "Compartir perfil"],[">Mes looks<", ">Mis looks<"],[">Favoris<", ">Favoritos<"],[">Nouveau<", ">Nuevo<"],[">Réglages<", ">Ajustes<"],["<small>abonnés</small>", "<small>seguidores</small>"],["<small>abonnements</small>", "<small>seguidos</small>"],["Ton look <em>de ce midi</em>", "Tu look de <em>mediodía</em>"],["Ton look <em>de cet après-midi</em>", "Tu look de <em>esta tarde</em>"],["Ton look <em>de ce soir</em>", "Tu look de <em>esta noche</em>"],["Mon programme change, adapte mon look", "Cambio de planes, adapta mi look"],["Ton programme change ?", "¿Cambio de planes?"],["Adapter mon look", "Adaptar mi look"],["Garder mon look du jour", "Mantener el look de hoy"],[">Modifier<", ">Editar<"],[">Ce midi<", ">Mediodía<"],[">Cet après-midi<", ">Esta tarde<"],[">Ce soir<", ">Esta noche<"],[">Quand<", ">Cuándo<"],[">Pour<", ">Para<"],['>Changer<','>Cambiar<'],["Thème de l'appli","Tema de la app"],['Bienvenue sur MaisonFit','Bienvenido a MaisonFit'],["Deux questions pour que l'appli te ressemble. Tu pourras tout changer dans les réglages.","Unas preguntas para que la app se parezca a ti. Puedes cambiarlo todo en ajustes."],["Tu t'habilles plutôt…","Sueles vestir…"],['Mode femme','Moda mujer'],['Mode homme','Moda hombre'],['Unisexe','Unisex'],['Ton style','Tu estilo'],['Les couleurs que tu portes le plus','Los colores que más llevas'],['Les couleurs que tu ne portes jamais','Los colores que nunca llevas'],["Ce que tu ne veux jamais qu'on te propose","Nunca me propongas"],["Ta couleur d'accent","Tu color de acento"],["C'est parti","Vamos"],["MaisonFit s'adapte à tes goûts.",'MaisonFit se adapta a tus gustos.'],['Ta langue','Tu idioma'],
+['Pourquoi cette tenue →','Por qué este look →'],['Ce look te plaît ?','¿Te gusta este look?'],['>Météo<','>Tiempo<'],['>Ressenti<','>Sensación<'],["J'ai souvent froid",'Suelo tener frío'],["J'ai toujours chaud",'Siempre tengo calor'],['Je porte ce look','Me pongo este look'],['Autre look','Otro look'],['♡ Ajouter à mes favoris','♡ Añadir a favoritos'],['Ce soir je sors, adapte mon look','Esta noche salgo, adapta mi look'],['Ajouter à ma story 🔥','Añadir a mi historia 🔥'],["changement de look gratuit aujourd'hui",'cambio de look gratis hoy'],['Démo, heure','Demo, hora'],['Autre notif','Otra notif'],['Réglages notifs','Ajustes'],['Maint.','Ahora'],['+ Personnaliser','+ Personalizar'],['Série ','Racha '],[' jours',' días'],
+['Ta <em>semaine</em>','Tu <em>semana</em>'],["Choisis tes looks à l'avance. Si la météo change, MaisonFit te prévient la veille au soir.","Elige tus looks con antelación. Si cambia el tiempo, MaisonFit te avisa la noche anterior."],['Choisi par toi ✓ · modifier','Elegido por ti ✓ · editar'],['Proposé par MaisonFit · touche pour choisir','Propuesto por MaisonFit · toca para elegir'],['Ton journal de looks','Tu diario de looks'],
+['Ma <em>garde-robe</em>','Mi <em>armario</em>'],['♡ Favoris et stats','♡ Favoritos y stats'],['Check shopping','Check de compras'],['>Tout<','>Todo<'],['>Hauts<','>Partes de arriba<'],['>Bas<','>Partes de abajo<'],['>Chaussures<','>Zapatos<'],['>Vestes<','>Chaquetas<'],['>Haut<','>Arriba<'],['>Veste<','>Chaqueta<'],['Ajouter','Añadir'],
+['Le <em>social</em>','<em>Social</em>'],['>Amis<','>Amigos<'],['>Abonnements<','>Siguiendo<'],['>Pour toi<','>Para ti<'],['Publier mon look','Publicar mi look'],['Stylistes du moment','Estilistas del momento'],['>Suivre<','>Seguir<'],['>Abonné<','>Siguiendo<'],[' abonnés',' seguidores'],['>Comparer<','>Comparar<'],['Recréer avec mes vêtements','Recrear con mi ropa'],['La réf stp 🙏','¿De dónde es? 🙏'],['Ta story','Tu historia'],['Garde tes flammes','Mantén tus llamas'],
+['Mes <em>conversations</em>','Mis <em>chats</em>'],['Créer un groupe','Crear un grupo'],
+["</svg>Aujourd'hui<",'</svg>Hoy<'],['</svg>Semaine<','</svg>Semana<'],['</svg>Messages<','</svg>Chats<'],['</svg>Garde-robe<','</svg>Armario<'],
+['>Cours<','>Clase<'],['>Date<','>Cita<'],['>Travail<','>Trabajo<'],['>Soirée<','>Fiesta<'],['>Week-end chill<','>Finde tranqui<'],['>Sport<','>Deporte<'],['>Entretien<','>Entrevista<'],['>Voyage<','>Viaje<'],
+['12°C, pluie','12°C, lluvia'],['17°C, nuageux','17°C, nublado'],['20°C, soleil','20°C, sol'],['3°C, froid sec','3°C, frío seco'],[' à Toulouse',' en Toulouse']],
+it:[[">Apparence<", ">Aspetto<"],["</span>Blanc<", "</span>Bianco<"],["</span>Noir<", "</span>Nero<"],["Moyenne de saison · la météo en direct arrive avec la vraie appli", "Media stagionale · il meteo in diretta arriverà con l'app vera"],["Destination non reconnue, vérifie l'orthographe", "Destinazione non riconosciuta, controlla l'ortografia"],["Chargement de la météo en direct…", "Caricamento meteo in diretta…"],["Météo en direct", "Meteo in diretta"],["En direct jusqu'à 16 jours, puis moyenne de saison", "In diretta fino a 16 giorni, poi media stagionale"],["Météo en direct indisponible · moyenne de saison", "Meteo in diretta non disponibile · media stagionale"],["Dis où tu pars et quand, MaisonFit regarde la météo sur place et fait ta valise.", "Dicci dove e quando. MaisonFit guarda il meteo sul posto e fa la tua valigia."],["placeholder=\"Ville ou pays\"", "placeholder=\"Città o paese\""],[">Aller<", ">Andata<"],[">Retour<", ">Ritorno<"],[">Entre ", ">Tra "],["°C et ", "°C e "],[" · pluie prévue ", " · pioggia prevista "],[" · pas de pluie prévue", " · niente pioggia"],[" jours</b>", " giorni</b>"],[" jour<", " giorno<"],["Écris ta destination et choisis tes dates.", "Scrivi la destinazione e scegli le date."],[">Lun<br>", ">Lun<br>"],[">Mar<br>", ">Mar<br>"],[">Mer<br>", ">Mer<br>"],[">Jeu<br>", ">Gio<br>"],[">Ven<br>", ">Ven<br>"],[">Sam<br>", ">Sab<br>"],[">Dim<br>", ">Dom<br>"],["‹ Retour à ma semaine", "‹ Torna alla mia settimana"],["Ma <em>valise</em>", "La mia <em>valigia</em>"],["Dis où tu pars, MaisonFit prépare tes looks selon la météo sur place et la liste de ce qu'il faut emporter.", "Dicci dove vai. MaisonFit prepara i tuoi look secondo il meteo sul posto e la lista di cosa portare."],[">Destination<", ">Destinazione<"],[">Durée<", ">Durata<"],[">Sur place<", ">Sul posto<"],["Refaire ma valise", "Rifai la valigia"],["Faire ma valise", "Fai la valigia"],["Dans ta valise", "Nella tua valigia"],[" pièces · ", " capi · "],[" rangées<", " in valigia<"],[">Les essentiels<", ">Gli essenziali<"],[">Sous-vêtements<", ">Intimo<"],[">Chaussettes<", ">Calzini<"],[">Pyjama<", ">Pigiama<"],[">Trousse de toilette<", ">Beauty case<"],[">Chargeur<", ">Caricatore<"],[">Papiers d'identité<", ">Documenti<"],[">Parapluie<", ">Ombrello<"],["Valise bouclée. Bon voyage !", "Valigia pronta. Buon viaggio!"],["Tes looks jour par jour", "I tuoi look giorno per giorno"],["Tu pars en voyage ?", "Parti per un viaggio?"],["MaisonFit prépare ta valise", "MaisonFit prepara la tua valigia"],[", pluie<", ", pioggia<"],[">Londres<", ">Londra<"],[">Barcelone<", ">Barcellona<"],[">Passer<", ">Salta<"],[">Suivant<", ">Avanti<"],[">C'est compris<", ">Ho capito<"],[">Revoir le tuto<", ">Rivedi il tutorial<"],[">Compte<", ">Profilo<"],["Ton avatar", "Il tuo avatar"],["Il porte ton look du jour, automatiquement.", "Indossa il tuo look del giorno, automaticamente."],[">Peau<", ">Pelle<"],[">Cheveux<", ">Capelli<"],[">Couleur des cheveux<", ">Colore dei capelli<"],[">Accessoire<", ">Accessorio<"],["C'est moi !", "Sono io!"],["Stories à la une", "Storie in evidenza"],["Modifier le profil", "Modifica profilo"],["Partager le profil", "Condividi profilo"],[">Mes looks<", ">I miei look<"],[">Favoris<", ">Preferiti<"],[">Nouveau<", ">Nuovo<"],[">Réglages<", ">Impostazioni<"],["<small>abonnés</small>", "<small>follower</small>"],["<small>abonnements</small>", "<small>seguiti</small>"],["Ton look <em>de ce midi</em>", "Il tuo look <em>di pranzo</em>"],["Ton look <em>de cet après-midi</em>", "Il tuo look <em>del pomeriggio</em>"],["Ton look <em>de ce soir</em>", "Il tuo look <em>di stasera</em>"],["Mon programme change, adapte mon look", "Cambio di programma, adatta il mio look"],["Ton programme change ?", "Cambio di programma?"],["Adapter mon look", "Adatta il mio look"],["Garder mon look du jour", "Tieni il look di oggi"],[">Modifier<", ">Modifica<"],[">Ce midi<", ">A pranzo<"],[">Cet après-midi<", ">Oggi pomeriggio<"],[">Ce soir<", ">Stasera<"],[">Quand<", ">Quando<"],[">Pour<", ">Per<"],['>Changer<','>Cambia<'],["Thème de l'appli","Tema dell'app"],['Bienvenue sur MaisonFit','Benvenuto su MaisonFit'],["Deux questions pour que l'appli te ressemble. Tu pourras tout changer dans les réglages.","Qualche domanda perché l'app ti somigli. Puoi cambiare tutto nelle impostazioni."],["Tu t'habilles plutôt…","Di solito ti vesti…"],['Mode femme','Moda donna'],['Mode homme','Moda uomo'],['Unisexe','Unisex'],['Ton style','Il tuo stile'],['Les couleurs que tu portes le plus','I colori che indossi di più'],['Les couleurs que tu ne portes jamais','I colori che non indossi mai'],["Ce que tu ne veux jamais qu'on te propose","Non propormi mai"],["Ta couleur d'accent","Il tuo colore d'accento"],["C'est parti","Andiamo"],["MaisonFit s'adapte à tes goûts.","MaisonFit si adatta ai tuoi gusti."],['Ta langue','La tua lingua'],
+['Pourquoi cette tenue →','Perché questo look →'],['Ce look te plaît ?','Ti piace questo look?'],['>Météo<','>Meteo<'],['>Ressenti<','>Percepita<'],["J'ai souvent froid",'Ho spesso freddo'],["J'ai toujours chaud",'Ho sempre caldo'],['Je porte ce look','Indosso questo look'],['Autre look','Altro look'],['♡ Ajouter à mes favoris','♡ Aggiungi ai preferiti'],['Ce soir je sors, adapte mon look','Stasera esco, adatta il mio look'],['Ajouter à ma story 🔥','Aggiungi alla mia storia 🔥'],["changement de look gratuit aujourd'hui",'cambio di look gratis oggi'],['Démo, heure','Demo, ora'],['Autre notif','Altra notifica'],['Réglages notifs','Impostazioni'],['Maint.','Ora'],['+ Personnaliser','+ Personalizza'],['Série ','Serie '],[' jours',' giorni'],
+['Ta <em>semaine</em>','La tua <em>settimana</em>'],["Choisis tes looks à l'avance. Si la météo change, MaisonFit te prévient la veille au soir.","Scegli i tuoi look in anticipo. Se il meteo cambia, MaisonFit ti avvisa la sera prima."],['Choisi par toi ✓ · modifier','Scelto da te ✓ · modifica'],['Proposé par MaisonFit · touche pour choisir','Proposto da MaisonFit · tocca per scegliere'],['Ton journal de looks','Il tuo diario dei look'],
+['Ma <em>garde-robe</em>','Il mio <em>guardaroba</em>'],['♡ Favoris et stats','♡ Preferiti e statistiche'],['Check shopping','Check shopping'],['>Tout<','>Tutto<'],['>Hauts<','>Top<'],['>Bas<','>Pantaloni e gonne<'],['>Chaussures<','>Scarpe<'],['>Vestes<','>Giacche<'],['>Haut<','>Top<'],['>Veste<','>Giacca<'],['Ajouter','Aggiungi'],
+['Le <em>social</em>','<em>Social</em>'],['>Amis<','>Amici<'],['>Abonnements<','>Seguiti<'],['>Pour toi<','>Per te<'],['Publier mon look','Pubblica il mio look'],['Stylistes du moment','Stylist del momento'],['>Suivre<','>Segui<'],['>Abonné<','>Segui già<'],[' abonnés',' follower'],['>Comparer<','>Confronta<'],['Recréer avec mes vêtements','Ricrea con i miei vestiti'],['La réf stp 🙏','Da dove viene? 🙏'],['Ta story','La tua storia'],['Garde tes flammes','Tieni accese le fiamme'],
+['Mes <em>conversations</em>','Le mie <em>chat</em>'],['Créer un groupe','Crea un gruppo'],
+["</svg>Aujourd'hui<",'</svg>Oggi<'],['</svg>Semaine<','</svg>Settimana<'],['</svg>Messages<','</svg>Chat<'],['</svg>Garde-robe<','</svg>Guardaroba<'],
+['>Cours<','>Lezione<'],['>Date<','>Appuntamento<'],['>Travail<','>Lavoro<'],['>Soirée<','>Serata<'],['>Week-end chill<','>Weekend relax<'],['>Entretien<','>Colloquio<'],['>Voyage<','>Viaggio<'],
+['12°C, pluie','12°C, pioggia'],['17°C, nuageux','17°C, nuvoloso'],['20°C, soleil','20°C, sole'],['3°C, froid sec','3°C, freddo secco'],[' à Toulouse',' a Tolosa']],
+de:[[">Apparence<", ">Darstellung<"],["</span>Blanc<", "</span>Weiß<"],["</span>Noir<", "</span>Schwarz<"],["Moyenne de saison · la météo en direct arrive avec la vraie appli", "Saisondurchschnitt · Live-Wetter kommt mit der echten App"],["Destination non reconnue, vérifie l'orthographe", "Reiseziel nicht erkannt, prüfe die Schreibweise"],["Chargement de la météo en direct…", "Live-Wetter wird geladen…"],["Météo en direct", "Live-Wetter"],["En direct jusqu'à 16 jours, puis moyenne de saison", "Live bis 16 Tage, danach Saisondurchschnitt"],["Météo en direct indisponible · moyenne de saison", "Live-Wetter nicht verfügbar · Saisondurchschnitt"],["Dis où tu pars et quand, MaisonFit regarde la météo sur place et fait ta valise.", "Sag uns wohin und wann. MaisonFit checkt das Wetter vor Ort und packt deinen Koffer."],["placeholder=\"Ville ou pays\"", "placeholder=\"Stadt oder Land\""],[">Aller<", ">Hinreise<"],[">Retour<", ">Rückreise<"],[">Entre ", ">Zwischen "],["°C et ", "°C und "],[" · pluie prévue ", " · Regen an "],[" · pas de pluie prévue", " · kein Regen erwartet"],[" jours</b>", " Tage</b>"],[" jour<", " Tag<"],["Écris ta destination et choisis tes dates.", "Gib dein Reiseziel ein und wähle deine Daten."],[">Lun<br>", ">Mo<br>"],[">Mar<br>", ">Di<br>"],[">Mer<br>", ">Mi<br>"],[">Jeu<br>", ">Do<br>"],[">Ven<br>", ">Fr<br>"],[">Sam<br>", ">Sa<br>"],[">Dim<br>", ">So<br>"],["‹ Retour à ma semaine", "‹ Zurück zu meiner Woche"],["Ma <em>valise</em>", "Mein <em>Koffer</em>"],["Dis où tu pars, MaisonFit prépare tes looks selon la météo sur place et la liste de ce qu'il faut emporter.", "Sag uns, wohin es geht. MaisonFit plant deine Looks nach dem Wetter vor Ort und listet auf, was mitmuss."],[">Destination<", ">Reiseziel<"],[">Durée<", ">Dauer<"],[">Sur place<", ">Vor Ort<"],["Refaire ma valise", "Koffer neu packen"],["Faire ma valise", "Koffer packen"],["Dans ta valise", "In deinem Koffer"],[" pièces · ", " Teile · "],[" rangées<", " gepackt<"],[">Les essentiels<", ">Das Wichtigste<"],[">Sous-vêtements<", ">Unterwäsche<"],[">Chaussettes<", ">Socken<"],[">Pyjama<", ">Pyjama<"],[">Trousse de toilette<", ">Kulturbeutel<"],[">Chargeur<", ">Ladegerät<"],[">Papiers d'identité<", ">Ausweis / Pass<"],[">Parapluie<", ">Regenschirm<"],["Valise bouclée. Bon voyage !", "Koffer gepackt. Gute Reise!"],["Tes looks jour par jour", "Deine Looks Tag für Tag"],["Tu pars en voyage ?", "Gehst du auf Reisen?"],["MaisonFit prépare ta valise", "MaisonFit packt deinen Koffer"],[", pluie<", ", Regen<"],[">Londres<", ">London<"],[">Barcelone<", ">Barcelona<"],[">Passer<", ">Überspringen<"],[">Suivant<", ">Weiter<"],[">C'est compris<", ">Verstanden<"],[">Revoir le tuto<", ">Tour erneut ansehen<"],[">Compte<", ">Profil<"],["Ton avatar", "Dein Avatar"],["Il porte ton look du jour, automatiquement.", "Er trägt automatisch deinen Look des Tages."],[">Peau<", ">Haut<"],[">Cheveux<", ">Haare<"],[">Couleur des cheveux<", ">Haarfarbe<"],[">Accessoire<", ">Accessoire<"],["C'est moi !", "Das bin ich!"],["Stories à la une", "Highlights"],["Modifier le profil", "Profil bearbeiten"],["Partager le profil", "Profil teilen"],[">Mes looks<", ">Meine Looks<"],[">Favoris<", ">Favoriten<"],[">Nouveau<", ">Neu<"],[">Réglages<", ">Einstellungen<"],["<small>abonnés</small>", "<small>Follower</small>"],["<small>abonnements</small>", "<small>gefolgt</small>"],["Ton look <em>de ce midi</em>", "Dein <em>Mittags</em>-Look"],["Ton look <em>de cet après-midi</em>", "Dein <em>Nachmittags</em>-Look"],["Ton look <em>de ce soir</em>", "Dein <em>Abend</em>-Look"],["Mon programme change, adapte mon look", "Planänderung? Look anpassen"],["Ton programme change ?", "Planänderung?"],["Adapter mon look", "Look anpassen"],["Garder mon look du jour", "Heutigen Look behalten"],[">Modifier<", ">Ändern<"],[">Ce midi<", ">Mittags<"],[">Cet après-midi<", ">Heute Nachmittag<"],[">Ce soir<", ">Heute Abend<"],[">Quand<", ">Wann<"],[">Pour<", ">Für<"],['>Changer<','>Tauschen<'],["Thème de l'appli","App-Design"],['Bienvenue sur MaisonFit','Willkommen bei MaisonFit'],["Deux questions pour que l'appli te ressemble. Tu pourras tout changer dans les réglages.","Ein paar Fragen, damit die App zu dir passt. Du kannst alles später in den Einstellungen ändern."],["Tu t'habilles plutôt…","Du trägst eher…"],['Mode femme','Damenmode'],['Mode homme','Herrenmode'],['Unisexe','Unisex'],['Ton style','Dein Stil'],['Les couleurs que tu portes le plus','Farben, die du am meisten trägst'],['Les couleurs que tu ne portes jamais','Farben, die du nie trägst'],["Ce que tu ne veux jamais qu'on te propose","Schlag mir nie vor"],["Ta couleur d'accent","Deine Akzentfarbe"],["C'est parti","Los geht's"],["MaisonFit s'adapte à tes goûts.",'MaisonFit passt sich deinem Geschmack an.'],['Ta langue','Deine Sprache'],
+['Pourquoi cette tenue →','Warum dieser Look →'],['Ce look te plaît ?','Gefällt dir der Look?'],['>Météo<','>Wetter<'],['>Ressenti<','>Gefühlt<'],["J'ai souvent froid",'Mir ist oft kalt'],["J'ai toujours chaud",'Mir ist immer warm'],['Je porte ce look','Ich trage diesen Look'],['Autre look','Anderer Look'],['♡ Ajouter à mes favoris','♡ Zu Favoriten'],['Ce soir je sors, adapte mon look','Ich gehe heute Abend aus, pass meinen Look an'],['Ajouter à ma story 🔥','Zu meiner Story 🔥'],["changement de look gratuit aujourd'hui",'kostenloser Look-Wechsel heute'],['Démo, heure','Demo, Uhrzeit'],['Autre notif','Andere Mitteilung'],['Réglages notifs','Einstellungen'],['Maint.','Jetzt'],['+ Personnaliser','+ Anpassen'],['Série ','Serie '],[' jours',' Tage'],
+['Ta <em>semaine</em>','Deine <em>Woche</em>'],["Choisis tes looks à l'avance. Si la météo change, MaisonFit te prévient la veille au soir.","Plane deine Looks im Voraus. Ändert sich das Wetter, sagt dir MaisonFit am Vorabend Bescheid."],['Choisi par toi ✓ · modifier','Von dir gewählt ✓ · ändern'],['Proposé par MaisonFit · touche pour choisir','Von MaisonFit vorgeschlagen · tippen zum Wählen'],['Ton journal de looks','Dein Look-Tagebuch'],
+['Ma <em>garde-robe</em>','Mein <em>Kleiderschrank</em>'],['♡ Favoris et stats','♡ Favoriten & Statistiken'],['Check shopping','Shopping-Check'],['>Tout<','>Alle<'],['>Hauts<','>Oberteile<'],['>Bas<','>Hosen & Röcke<'],['>Chaussures<','>Schuhe<'],['>Vestes<','>Jacken<'],['>Haut<','>Oberteil<'],['>Veste<','>Jacke<'],['Ajouter','Hinzufügen'],
+['Le <em>social</em>','<em>Social</em>'],['>Amis<','>Freunde<'],['>Abonnements<','>Gefolgt<'],['>Pour toi<','>Für dich<'],['Publier mon look','Meinen Look posten'],['Stylistes du moment','Angesagte Stylisten'],['>Suivre<','>Folgen<'],['>Abonné<','>Gefolgt<'],[' abonnés',' Follower'],['>Comparer<','>Vergleichen<'],['Recréer avec mes vêtements','Mit meinen Sachen nachstylen'],['La réf stp 🙏','Woher ist das? 🙏'],['Ta story','Deine Story'],['Garde tes flammes','Halte deine Flammen'],
+['Mes <em>conversations</em>','Meine <em>Chats</em>'],['Créer un groupe','Gruppe erstellen'],
+["</svg>Aujourd'hui<",'</svg>Heute<'],['</svg>Semaine<','</svg>Woche<'],['</svg>Messages<','</svg>Chats<'],['</svg>Garde-robe<','</svg>Schrank<'],
+['>Cours<','>Uni<'],['>Travail<','>Arbeit<'],['>Soirée<','>Party<'],['>Week-end chill<','>Chill-Wochenende<'],['>Entretien<','>Vorstellungsgespräch<'],['>Voyage<','>Reise<'],
+['12°C, pluie','12°C, Regen'],['17°C, nuageux','17°C, bewölkt'],['20°C, soleil','20°C, sonnig'],['3°C, froid sec','3°C, trocken kalt'],[' à Toulouse',' in Toulouse']]};
+for(const k in TRW)TRW[k].sort((a,b)=>b[0].length-a[0].length);
+const NOTL={en:{m:['Your outfit is ready','{w}. Your look is waiting.'],n:['{t}°C at noon','Your look works all afternoon.'],e:['Tonight','{n}°C at 9pm. Going out? We can adapt your look.'],d:['Streak of {s} days','Your look is in your journal.'],o:['Did you wear your look?','Add it to your journal to keep your {s}-day streak.']},
+es:{m:['Tu look está listo','{w}. Tu look te espera.'],n:['{t}°C a mediodía','Tu look sirve para toda la tarde.'],e:['Esta noche','{n}°C a las 21h. ¿Sales? Adaptamos tu look.'],d:['Racha de {s} días','Tu look está en tu diario.'],o:['¿Te pusiste tu look?','Añádelo a tu diario para mantener tu racha de {s} días.']},
+it:{m:['Il tuo look è pronto','{w}. Il tuo look ti aspetta.'],n:['{t}°C a mezzogiorno','Il tuo look va bene per tutto il pomeriggio.'],e:['Stasera','{n}°C alle 21. Esci? Adattiamo il tuo look.'],d:['Serie di {s} giorni','Il tuo look è nel tuo diario.'],o:['Hai indossato il tuo look?','Aggiungilo al diario per tenere la serie di {s} giorni.']},
+de:{m:['Dein Outfit ist bereit','{w}. Dein Look wartet.'],n:['{t}°C am Mittag','Dein Look passt den ganzen Nachmittag.'],e:['Heute Abend','{n}°C um 21 Uhr. Gehst du aus? Wir passen deinen Look an.'],d:['Serie von {s} Tagen','Dein Look ist in deinem Tagebuch.'],o:['Hast du deinen Look getragen?','Trag ihn ins Tagebuch ein, um deine {s}-Tage-Serie zu halten.']}};
+function tx(html){const L=S.lang||'fr';if(L==='fr'||!TRW[L])return html;let o=html.replace(/Ton look <em>(.*?)<\/em> du jour/g,(m,a)=>{const k=Object.keys(OCCN).find(x=>OCCN[x].toLowerCase()===a);return LOOKT[L]((OCCL[L]&&OCCL[L][k])||a);});for(const [a,b] of TRW[L])o=o.split(a).join(b);return o;}
+function langNotif(){const L=S.lang||'fr';const T=NOTL[L];if(!T)return null;const f=FC[S.wea];const fill=s=>s.replace('{w}',WEA[S.wea].n).replace('{t}',f[1][1]).replace('{n}',f[4][1]).replace(/\{s\}/g,S.streak);const k=S.hi===0?'m':S.hi===1?'n':S.hi===2?'e':S.wornToday?'d':'o';const r={t:fill(T[k][0]),m:fill(T[k][1])};if(k==='m')r.look=1;if(k==='e')r.act=true;if(k==='o')r.act2=true;return r;}
+
+function obSheet(){sheet(`<div class="prof"><span class="lm" style="width:64px;height:64px;border-radius:16px">${MONO}</span><h2>Bienvenue sur MaisonFit</h2><p class="sub">Deux questions pour que l'appli te ressemble. Tu pourras tout changer dans les réglages.</p></div>
+<p class="note">Ta langue</p><div class="filt" style="flex-wrap:wrap">${Object.keys(LANGN).map(k=>`<button data-lang="${k}" aria-pressed="${(S.lang||'fr')===k}">${LANGN[k]}</button>`).join('')}</div><p class="note">Apparence</p><div class="filt">${['light','dark'].map(k=>`<button data-appmode="${k}" aria-pressed="${(S.mode||'light')===k}"><span class="mdot ${k}"></span>${k==='light'?'Blanc':'Noir'}</button>`).join('')}</div>
+<p class="note">Tu t'habilles plutôt…</p><div class="gcards">${[['f','Mode femme',[['cami','noir'],['skirt','beige'],['boot','noir']]],['h','Mode homme',[['shirt','ciel'],['pant','beige'],['loaf','marron']]],['x','Unisexe',[['tee','blanc'],['jean','denim'],['sneak','blanc']]]].map(([k,n,its])=>`<button class="gcard" data-gender="${k}" aria-pressed="${S.gender===k}"><span class="gpics">${its.map(([s,c])=>svg({shape:s,col:c})).join('')}</span><b>${n}</b></button>`).join('')}</div>
+<p class="note">Ton style</p><div class="filt" style="flex-wrap:wrap">${[['chic','Chic'],['street','Streetwear'],['casual','Casual'],['sport','Sporty'],['mini','Minimaliste'],['color','Coloré']].map(([k,n])=>`<button data-sty="${k}" aria-pressed="${(S.styles||[]).includes(k)}">${n}</button>`).join('')}</div>
+<p class="note">Les couleurs que tu portes le plus</p><div class="sw">${Object.keys(COLORS).map(k=>`<button type="button" data-fav="${k}" aria-label="${k}" title="${k}" aria-pressed="${(S.fav||[]).includes(k)}" style="background:${COLORS[k]}"></button>`).join('')}</div>
+<p class="note">Les couleurs que tu ne portes jamais</p><div class="sw">${Object.keys(COLORS).map(k=>`<button type="button" data-avoid="${k}" aria-label="${k}" title="${k}" aria-pressed="${(S.avoid||[]).includes(k)}" style="background:${COLORS[k]};${(S.avoid||[]).includes(k)?'outline:3px solid #b3261e;outline-offset:2px':''}"></button>`).join('')}</div>
+<p class="note">Ce que tu ne veux jamais qu'on te propose</p><div class="filt" style="flex-wrap:wrap">${[['skirt','Jupes'],['cami','Tops satin'],['shirt','Chemises'],['loaf','Mocassins'],['boot','Bottines et boots'],['puffer','Doudounes'],['jacket','Vestes et blazers']].map(([k,n])=>`<button data-ban="${k}" aria-pressed="${(S.ban||[]).includes(k)}">Pas de ${n.toLowerCase()}</button>`).join('')}</div>
+<p class="note" style="text-align:center;font-family:'Bodoni Moda',serif;font-style:italic;font-size:15px;color:var(--ink)">MaisonFit s'adapte à tes goûts.</p><button class="btn" data-a="obdone">C'est parti</button>`,true);}
+const CANDS=[
+{cat:'bottom',shape:'jean',name:'Jean noir slim',col:'noir',st:['casual','chic','soiree']},
+{cat:'top',shape:'pull',name:'Pull rose',col:'rose',st:['casual'],w:2},
+{cat:'outer',shape:'jacket',name:'Veste cuir bordeaux',col:'bordeaux',st:['casual','soiree']},
+{cat:'shoes',shape:'sneak',name:'Baskets jaunes',col:'jaune',st:['casual','sport']}];
+
+const SH={
+tee:'M28 22 42 14Q50 20 58 14L72 22 86 36 75 44 70 38V88H30V38L25 44 14 36Z',
+pull:'M30 18 42 12Q50 18 58 12L70 18 88 72 77 76 70 42V90H30V42L23 76 12 72Z',
+shirt:'M30 18 42 12 50 22 58 12 70 18 88 72 77 76 70 42V90H30V42L23 76 12 72Z',
+cami:'M34 14H38L40 30Q50 34 60 30L62 14H66L70 40V88H30V40Z',
+jean:'M28 10H72L76 92H56L50 40 44 92H24Z',
+pant:'M28 10H72L78 92H57L50 42 43 92H22Z',
+skirt:'M32 18H68L82 82H18Z',
+sneak:'M10 62Q12 44 32 46L48 50Q70 52 88 62Q91 72 82 74H16Q9 72 10 62Z',
+boot:'M30 14H54V54Q72 56 84 64Q86 76 76 76H26Q22 60 30 54Z',
+loaf:'M10 62Q14 50 34 50H60Q80 52 88 62Q90 72 80 72H18Q10 72 10 62Z',
+coat:'M30 10 42 6 50 18 58 6 70 10 86 74 76 78 70 40V94H30V40L24 78 14 74Z',
+jacket:'M30 14 42 8 50 20 58 8 70 14 86 64 76 68 70 40V82H30V40L24 68 14 64Z',
+puffer:'M28 14 42 8Q50 14 58 8L72 14 88 64 76 68 72 42V84H28V42L24 68 12 64Z'};
+const DETAIL={
+shirt:'<path d="M50 22V90" stroke="rgba(0,0,0,.25)" stroke-width="1.5"/><circle cx="50" cy="36" r="1.6" fill="rgba(0,0,0,.35)"/><circle cx="50" cy="50" r="1.6" fill="rgba(0,0,0,.35)"/><circle cx="50" cy="64" r="1.6" fill="rgba(0,0,0,.35)"/>',
+pull:'<path d="M30 84H70" stroke="rgba(0,0,0,.18)" stroke-width="4"/>',
+jean:'<path d="M28 18H72M50 18V40" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-dasharray="3 2"/>',
+sneak:'<path d="M12 70H86" stroke="#fff" stroke-width="5"/><path d="M36 50l4 8M44 51l3 7" stroke="rgba(0,0,0,.3)" stroke-width="1.5"/>',
+boot:'<path d="M26 72H80" stroke="rgba(0,0,0,.35)" stroke-width="5"/>',
+loaf:'<path d="M14 69H84" stroke="rgba(0,0,0,.3)" stroke-width="4"/><path d="M40 52h18" stroke="rgba(0,0,0,.3)" stroke-width="3"/>',
+coat:'<path d="M50 18V94" stroke="rgba(0,0,0,.25)" stroke-width="1.5"/><path d="M30 58H70" stroke="rgba(0,0,0,.2)" stroke-width="3"/>',
+jacket:'<path d="M50 20V82" stroke="rgba(0,0,0,.25)" stroke-width="1.5"/>',
+puffer:'<path d="M28 30H72M28 46H72M28 62H72M24 46 16 50M76 46l8 4" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>'};
+const mix=(hex,amt)=>{const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const t=amt<0?0:255,p=Math.abs(amt);r=Math.round(r+(t-r)*p);g=Math.round(g+(t-g)*p);b=Math.round(b+(t-b)*p);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);};
+let gid=0;
+const svg=(it)=>{const c=COLORS[it.col];const k='g'+(gid++);const edge=it.col==='blanc'?'#d8d2cb':mix(c,-.25);
+return `<svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="${k}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${mix(c,.22)}"/><stop offset=".55" stop-color="${c}"/><stop offset="1" stop-color="${mix(c,-.18)}"/></linearGradient><clipPath id="${k}c"><path d="${SH[it.shape]}"/></clipPath></defs><path d="${SH[it.shape]}" fill="url(#${k})" stroke="${edge}" stroke-width="1" stroke-linejoin="round"/><g clip-path="url(#${k}c)"><path d="M58 0 L100 0 100 100 70 100Z" fill="rgba(0,0,0,.07)"/><path d="M38 14 Q44 50 36 96" stroke="rgba(255,255,255,.22)" stroke-width="5" fill="none"/><path d="M62 30 Q58 60 64 92" stroke="rgba(0,0,0,.06)" stroke-width="4" fill="none"/>${DETAIL[it.shape]||''}</g></svg>`;};
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+let S;
+const fresh=()=>({hi:0,fav:[],styles:[],avoid:[],ban:[],like:{},dis:{},gender:null,accent:'#d8c8b0',wk:null,chosen:{},alert:null,kept:{},eve:null,dirty:[],streak:6,wornToday:false,week:null,wthemes:['cours','cours','travail','cours','soiree','weekend','weekend'],journal:[1,1,0,1,1,1,0,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1],themes:[],tab:'today',items:START.map(x=>({...x,st:[...x.st]})),wea:'pluie',occ:'cours',cur:null,rerolls:0,checks:0,plus:false,favs:[],worn:false,filter:'all',seen:[],cand:0});
+const get=id=>S.items.find(i=>i.id===id);
+const by=c=>S.items.filter(i=>i.cat===c&&!(S.dirty||[]).includes(i.id)&&!(S.avoid||[]).includes(i.col)&&!(S.ban||[]).includes(i.shape));
+const SEASON={ete:['blanc','beige','ciel','rose','jaune','sauge','denim'],hiver:['noir','marine','bordeaux','marron','gris','beige'],mi:['beige','sauge','denim','marine','marron','blanc']};
+const seasonOf=t=>t>=20?'ete':t<=9?'hiver':'mi';
+const taste=arr=>{let s=0;const L=S.like||{},D=S.dis||{},st=S.styles||[];for(const i of arr){if(!i)continue;s+=(L[i.id]||0)*2-(D[i.id]||0)*3;if(st.includes('chic')&&i.st.includes('chic'))s+=1;if(st.includes('street')&&(i.shape==='sneak'||i.shape==='puffer'||i.shape==='tee'))s+=1.5;if(st.includes('casual')&&i.st.includes('casual'))s+=0.8;if(st.includes('sport')&&i.st.includes('sport'))s+=1.5;if(st.includes('mini')&&NEUTRAL.includes(i.col))s+=0.8;if(st.includes('color')&&!NEUTRAL.includes(i.col))s+=1.5;}return s;};
+const isDirty=id=>(S.dirty||[]).includes(id);
+const fitsOcc=(it,o)=>it.st.some(s=>OCC[o].includes(s));
+const colorsOk=arr=>arr.every((a,i)=>arr.every((b,j)=>i===j||ok2(a.col,b.col)))&&arr.filter(a=>!NEUTRAL.includes(a.col)).length<=2;
+function combos(o,w,needOuter){
+  const out=[];
+  for(const t of by('top'))for(const b of by('bottom'))for(const s of by('shoes')){
+    const base=[t,b,s];if(!base.every(x=>fitsOcc(x,o))||!colorsOk(base))continue;
+    const common=OCC[o].some(s=>base.every(x=>x.st.includes(s)));
+    const outs=needOuter?by('outer').filter(x=>fitsOcc(x,o)&&colorsOk([...base,x])):[null];
+    for(const ou of outs){let sc=Math.random()*2+(common?4:0)+(ou&&OCC[o].some(s=>[...base,ou].every(x=>x.st.includes(s)))?2:0);
+      if(w){if(w.t<12&&t.w>=2)sc+=3;if(w.t>20&&t.w>=2)sc-=5;if(w.r&&s.rain)sc+=3;if(w.r&&s.col==='blanc')sc-=3;if(ou){if(w.r&&ou.rain)sc+=4;if(w.t<6&&ou.w>=3)sc+=5;if(w.t<8&&ou.w<2)sc-=7;if(w.t>=10&&ou.w>=3)sc-=4;}}
+      sc+=taste([t,b,s,ou]);if(w){const pal=SEASON[seasonOf(w.t)];for(const i of [t,b,s,ou]){if(!i)continue;if(pal.includes(i.col))sc+=0.8;if((S.fav||[]).includes(i.col))sc+=1.5;if(w.r&&b.col==='blanc')sc-=1;}}out.push({ids:[t.id,b.id,s.id].concat(ou?[ou.id]:[]),sc});}
+  }
+  return out.sort((a,b)=>b.sc-a.sc);
+}
+function pick(){
+  const w0=WEA[S.wea];const w={...w0,t:w0.t+([0,-5,5][S.tmp||0])};const need=(w.t<18||w.r)&&S.occ!=='sport'||w.t<8;
+  let list=combos(S.occ,w,need);
+  if(!list.length)list=combos(S.occ,w,false);
+  const fresh=list.filter(c=>!S.seen.includes(c.ids.join('-')));
+  const c=(fresh[0]||list[0]);S.cur=c?c.ids:null;if(c)S.seen.push(c.ids.join('-'));S.worn=false;
+}
+function why(){const w=WEA[S.wea];const ids=S.cur||[];const its=ids.map(get);const p=[];
+  const ou=its.find(i=>i.cat==='outer'),sh=its.find(i=>i.cat==='shoes'),tp=its.find(i=>i.cat==='top');
+  if(w.r&&ou&&ou.rain)p.push(`${ou.name.toLowerCase()} contre la pluie`);
+  if(w.r&&sh&&sh.rain)p.push(`${sh.name.toLowerCase()} qui ne craignent pas l'eau`);
+  if(w.t<12&&tp&&tp.w>=2)p.push(`${tp.name.toLowerCase()} pour avoir chaud`);
+  const se=seasonOf(w.t);const favUsed=its.filter(i=>(S.fav||[]).includes(i.col));
+  if(se==='ete'&&its.some(i=>SEASON.ete.includes(i.col)&&i.col!=='denim'))p.push('des couleurs claires pour le soleil');
+  if(se==='hiver'&&its.some(i=>['noir','marine','bordeaux','marron','gris'].includes(i.col)))p.push("des tons profonds pour l'hiver");
+  if(favUsed.length)p.push('tes couleurs préférées ('+[...new Set(favUsed.map(i=>i.col))].join(', ')+')');
+  if(!p.length)p.push(`des couleurs qui vont bien ensemble pour ${OCCN[S.occ].toLowerCase()}`);
+  return 'Pourquoi cette tenue → '+p.join(', ')+'.';}
+const piece=(it,extra='')=>`<button class="piece ${isDirty(it.id)?'dirty':''}" data-item="${it.id}" ${extra}><span class="ph">${svg(it)}</span><b>${esc(it.name)}</b><small>${isDirty(it.id)?'<span class="dtag">Au linge sale</span>':CAT1[it.cat]}</small></button>`;
+
+const HRS=['7:30','12:00','17:30','21:00'];
+const FC={pluie:[[8,12,1],[12,13,1],[15,14,1],[18,11,1],[21,8,1],[23,7,1]],doux:[[8,17,0],[12,19,0],[15,20,0],[18,16,0],[21,9,1],[23,8,1]],soleil:[[8,20,0],[12,25,0],[15,27,0],[18,24,0],[21,15,0],[23,13,0]],froid:[[8,3,0],[12,5,0],[15,6,0],[18,2,0],[21,-3,0],[23,-4,0]]};
+const NOWI=[0,1,3,4];
+const wic=(t,r,night)=>r?'<svg viewBox="0 0 26 26"><path d="M7 15a5 5 0 0 1 1-9.9A6 6 0 0 1 19.6 8 4 4 0 0 1 19 15z" fill="#bdb7b0"/><path d="M9 18l-1 3M13 18l-1 3M17 18l-1 3" stroke="#6b8fb8" stroke-width="2" stroke-linecap="round"/></svg>':night?'<svg viewBox="0 0 26 26"><path d="M17 4a9 9 0 1 0 5 13A7 7 0 0 1 17 4z" fill="#8a857f"/></svg>':t>=19?'<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="5.5" fill="#e9b949"/><path d="M13 2v3M13 21v3M2 13h3M21 13h3M5 5l2 2M19 19l2 2M5 21l2-2M19 7l2-2" stroke="#e9b949" stroke-width="2" stroke-linecap="round"/></svg>':'<svg viewBox="0 0 26 26"><circle cx="9" cy="10" r="4.5" fill="#e9b949"/><path d="M8 19a5 5 0 0 1 1-9.9A6 6 0 0 1 20.6 12 4 4 0 0 1 20 19z" fill="#cfcac4"/></svg>';
+const adj=()=>[0,-5,5][S.tmp||0];
+const WHEN={midi:{i:1,n:'Ce midi',l:'de ce midi',h:'12h'},aprem:{i:2,n:'Cet après-midi',l:'de cet après-midi',h:'15h'},soir:{i:4,n:'Ce soir',l:'de ce soir',h:'21h'}};
+function evening(){
+  const P=S.plan||{when:'soir',occ:'soiree'};const e=FC[S.wea][WHEN[P.when].i];const we={t:e[1]+adj(),r:e[2]};
+  const need=(we.t<18||we.r)&&P.occ!=='sport';let list=combos(OCC[P.occ]?P.occ:'soiree',we,need);if(!list.length)list=combos(OCC[P.occ]?P.occ:'soiree',we,false);const bot=(S.cur||[]).map(get).find(i=>i&&i.cat==='bottom');
+  const keep=bot?list.filter(c=>c.ids.includes(bot.id)):[];
+  const c=(keep[0]||list[0]);S.eve=c?c.ids:null;
+}
+const VOICES={
+bff:{n:'Ta meilleure pote',d:'Cash, drôle, toujours là',
+ m:c=>[{t:'Coucou toi ✨',m:`${c.w}. J'ai choisi ta tenue ${c.occ}, fais-moi confiance pour une fois.`},{t:'Réveille-toi',m:`${c.top} avec ${c.bot}, je dis oui. Envoie-moi une photo après.`}],
+ rain:{t:'Alerte pluie 🌧️',m:`Baskets blanches interdites aujourd'hui. Je te surveille.`},black:{t:'Total black',m:`Mystérieux aujourd'hui ? J'adore. Tout le monde va se poser des questions.`},
+ noonRain:c=>({t:'Toujours la pluie',m:`Garde ton ${c.ou||'manteau'}, sérieux. Je veux pas t'entendre râler ce soir.`}),noonWarm:c=>({t:`${c.t}°C !`,m:`Enlève ta veste et profite, t'es trop bien comme ça.`}),noonCool:c=>({t:'Petit check',m:`Tu tiens le coup ? Ton look, lui, tient parfaitement.`}),
+ eveRain:c=>({t:'Plot twist 🌧️',m:`Il va pleuvoir ce soir (${c.n}°C). Tu sors ? Je te trouve un look en 2 secondes.`}),eveDrop:c=>({t:'Ça va cailler',m:`${c.n}°C ce soir. Tu sors comme ça ? Non. Laisse-moi t'aider.`}),eveCalm:c=>({t:'Ce soir ?',m:`${c.n}°C à 21h. Si tu sors, je m'occupe du look.`}),
+ todo:c=>({t:'Alors ce look ?',m:`Coche-le, ta série de ${c.s} jours compte sur toi. Et moi aussi.`}),done:c=>({t:`${c.s} jours 🔥`,m:`Plus organisé${c.e} que tout notre groupe d'amis réuni.`}),week:d=>`${d} a changé d'avis 🌧️`},
+styliste:{n:'Le styliste',d:'Exigeant, un brin snob',
+ m:c=>[{t:'Bonjour, darling',m:`${c.w}. ${c.top} avec ${c.bot}. Audacieux. J'approuve.`},{t:'Votre look est prêt',m:`Pensé pour ${c.occ}. Merci de ne rien changer, c'est de l'art.`}],
+ rain:{t:'Pluie, quelle horreur',m:`On protège les baskets blanches. Elles n'ont rien fait pour mériter ça.`},black:{t:'Total black',m:`Élégance absolue. Karl aurait validé.`},
+ noonRain:c=>({t:'Toujours cette pluie',m:`${c.ou||'Le manteau'} reste. C'est non négociable, darling.`}),noonWarm:c=>({t:`${c.t}°C`,m:`Retirez la veste avec élégance. Une épaule d'abord.`}),noonCool:c=>({t:'Un mot',m:`Gardez la veste. Avoir froid n'a jamais été tendance.`}),
+ eveRain:c=>({t:'Drame météo',m:`Pluie ce soir, ${c.n}°C. On ne sort pas comme ça. Je vous prépare autre chose.`}),eveDrop:c=>({t:'Changement de décor',m:`${c.n}°C ce soir. Votre look de jour n'est pas invité. On change ?`}),eveCalm:c=>({t:'Soirée ?',m:`${c.n}°C à 21h. Dites un mot et je vous habille.`}),
+ todo:c=>({t:'Le look du jour',m:`Porté ? Notez-le. ${c.s} jours de série, ne gâchons pas tout maintenant.`}),done:c=>({t:`${c.s} jours d'élégance`,m:`Votre garde-robe vous remercie. Moi aussi, un peu.`}),week:d=>`${d}, catastrophe météo`},
+coach:{n:'Le coach',d:'Motivant, à fond',
+ m:c=>[{t:'GO GO GO ☀️',m:`${c.w}. Tenue ${c.occ} prête. Habillé${c.e} en 3 minutes chrono.`},{t:'Nouvelle journée, nouveau look',m:`${c.top}, ${c.bot}. On ne réfléchit pas, on enfile.`}],
+ rain:{t:'Pluie = pas d\'excuse',m:`Chaussures de pluie aux pieds et on avance. Les baskets blanches restent au vestiaire.`},black:{t:'Total black',m:`Tenue de combat. Personne ne t'arrête aujourd'hui.`},
+ noonRain:c=>({t:'Mi-temps',m:`Toujours la pluie. Ton ${c.ou||'manteau'} tient le choc, toi aussi.`}),noonWarm:c=>({t:`${c.t}°C, on s'allège`,m:`Veste enlevée, épaules relâchées, on finit fort.`}),noonCool:c=>({t:'Mi-temps',m:`Garde la veste. On ne lâche rien, même pas la veste.`}),
+ eveRain:c=>({t:'Changement de tactique',m:`Pluie à 21h, ${c.n}°C. Tu sors ? On adapte le look et on gagne le match.`}),eveDrop:c=>({t:`-${c.drop}° ce soir`,m:`${c.n}°C. Ton look de jour ne tiendra pas. On change ?`}),eveCalm:c=>({t:'Prolongations ?',m:`${c.n}°C ce soir. Tu sors ? Look prêt en 2 secondes.`}),
+ todo:c=>({t:`${c.s} jours de série`,m:`Valide ton look et passe à ${c.s+1}. Allez !`}),done:c=>({t:`Record, ${c.s} jours 🔥`,m:`Discipline de champion. Repos, demain on remet ça.`}),week:d=>`${d}, la météo change de tactique`},
+maman:{n:'Maman inquiète',d:'Bienveillante, un peu trop',
+ m:c=>[{t:'Mon cœur',m:`${c.w}. J'ai préparé ta tenue ${c.occ}. Prends quand même un petit pull.`},{t:'Bonne journée',m:`${c.top} tout propre. Et mange un vrai petit-déj, s'il te plaît.`}],
+ rain:{t:'Il pleut !',m:`Mets des chaussures qui tiennent la pluie, pas tes baskets blanches. Tu vas encore rentrer les pieds trempés.`},black:{t:'Encore du noir ?',m:`Tu es superbe, mais un peu de couleur, ça te tuerait pas.`},
+ noonRain:c=>({t:'Tu as pris ton manteau ?',m:`Il pleut toujours. Garde ton ${c.ou||'manteau'}, je veux pas que tu tombes malade.`}),noonWarm:c=>({t:`${c.t}°C`,m:`Tu peux enlever ta veste. Mais tu la remets ce soir, hein.`}),noonCool:c=>({t:'Coucou',m:`Il fait frais, garde ta veste. Je dis ça pour toi.`}),
+ eveRain:c=>({t:'Tu sors ce soir ?',m:`Il va pleuvoir et faire ${c.n}°C. Change de tenue, ça me rassurerait.`}),eveDrop:c=>({t:'Tu sors ce soir ?',m:`${c.n}°C ! Tu ne sors pas comme ça. On change ?`}),eveCalm:c=>({t:'Ce soir',m:`${c.n}°C. Si tu sors, couvre-toi et envoie un message en rentrant.`}),
+ todo:c=>({t:'Ta journée ?',m:`Tu as mis le look que je t'ai préparé ? Coche-le, ta série de ${c.s} jours.`}),done:c=>({t:`${c.s} jours, je suis fière`,m:`Toujours au top. Va dormir maintenant.`}),week:d=>`${d}, il va faire mauvais`},
+sobre:{n:'Sobre',d:'Juste l\'info, sans blabla'}};
+const PSTYLE={chic:{n:'Chic',w:'Classe, comme toujours.'},street:{n:'Streetwear',w:'Fresh, comme d\'hab.'},casual:{n:'Casual',w:'Simple et efficace.'},sport:{n:'Sporty',w:'Confort maximum.'},boheme:{n:'Bohème',w:'Doux et libre.'}};
+const pickV=(arr,k)=>arr[((S.nv||0)+k)%arr.length];
+const lc=s=>s?s.toLowerCase():'';
+function ctxN0(){const w=WEA[S.wea];const f=FC[S.wea];const its=(S.cur||[]).map(get).filter(Boolean);const g=c=>its.find(i=>i.cat===c);
+  return {w:w.n,t:f[1][1],n:f[4][1],drop:f[1][1]-f[4][1],occ:lc(OCCN[S.occ]),top:(g('top')||{}).name||'Ton haut',bot:lc((g('bottom')||{}).name)||'ton bas',ou:lc((g('outer')||{}).name),s:S.streak,rain:w.r,black:its.filter(i=>i.col==='noir').length>=3,hasOut:!!g('outer'),wt:w.t};}
+function ctxN(){const c=ctxN0();c.e=S.gender==='f'?'e':S.gender==='h'?'':'·e';return c;}
+function notifHTML(){
+  if((S.lang||'fr')!=='fr'){const r=langNotif();if(r)return r;}
+  const c=ctxN();const f=FC[S.wea];const n=f[4];const noon=f[1];const vk=S.voice||'bff';const V=VOICES[vk];const ps=PSTYLE[S.pstyle||'chic'];
+  if(vk==='sobre'){
+    if(S.hi===0)return {t:'Ta tenue est prête',m:`${c.w} à Toulouse. Ton look ${c.occ} t'attend.`,look:1};
+    if(S.hi===1){if((S.nfreq||'normal')==='essentiel')return {t:'Mode essentiel',m:'Pas de notif à midi.',quiet:true};return noon[2]?{t:'Toujours de la pluie',m:`${noon[1]}°C et averses jusqu'au soir.`}:{t:`${noon[1]}°C ce midi`,m:c.hasOut&&noon[1]>=17?'Tu peux enlever ta veste.':'Ton look est parfait pour l\'après-midi.'};}
+    if(S.hi===2)return {t:'Ce soir',m:`${n[1]}°C${n[2]?' et pluie':''} à 21h. Tu ressors ?`,act:true};
+    return S.wornToday?{t:`Série de ${c.s} jours`,m:'Look ajouté à ton journal.'}:{t:'Tu as porté ton look ?',m:`Ajoute-le à ton journal, série de ${c.s} jours.`,act2:true};}
+  if(S.hi===0){let L=V.m(c);if(c.rain)L=[V.rain,...L];if(c.black)L=[V.black,...L];const r=pickV(L,0);return {t:r.t,m:r.m+(r===V.rain||r===V.black?'':' '+ps.w),look:1};}
+  if(S.hi===1){if((S.nfreq||'normal')==='essentiel')return {t:'Mode essentiel',m:'Pas de notif à midi. MaisonFit ne te parle que quand c\'est utile.',quiet:true};
+    return noon[2]?V.noonRain(c):(noon[1]>=17&&c.hasOut?V.noonWarm(c):V.noonCool(c));}
+  if(S.hi===2){const rainNew=n[2]&&!noon[2];return {...(rainNew?V.eveRain(c):c.drop>=6?V.eveDrop(c):V.eveCalm(c)),act:true};}
+  return S.wornToday?V.done(c):{...V.todo(c),act2:true};
+}
+function notifSheet(){const save=S.hi;S.hi=0;const keep=S.voice;
+  const prev=Object.keys(VOICES).map(k=>{S.voice=k;const N=notifHTML();return {k,N};});S.voice=keep;S.hi=save;
+  sheet(`<h2>Tes notifs</h2><p class="sub">Choisis qui t'écrit le matin. Jamais plus de 3 notifs par jour, jamais après 22h.</p>
+<div class="olist">${prev.map(({k,N})=>`<button class="voice" data-voice="${k}" aria-pressed="${(S.voice||'bff')===k}"><b>${VOICES[k].n}</b><small>${VOICES[k].d}</small><span class="vq">« ${esc(N.t)}. ${esc(N.m)} »</span></button>`).join('')}</div>
+<p class="note">Ton style</p><div class="filt" style="flex-wrap:wrap">${Object.keys(PSTYLE).map(k=>`<button data-pstyle="${k}" aria-pressed="${(S.pstyle||'chic')===k}">${PSTYLE[k].n}</button>`).join('')}</div>
+<p class="note">Fréquence</p><div class="filt" style="flex-wrap:wrap"><button data-nfreq="essentiel" aria-pressed="${S.nfreq==='essentiel'}">L'essentiel</button><button data-nfreq="normal" aria-pressed="${(S.nfreq||'normal')==='normal'}">Normal</button></div>
+<p class="note">L'essentiel → le look du matin et les alertes météo. Normal → en plus, le point du midi et le rappel du soir.</p>
+<button class="btn ghost" data-a="tutoagain" style="margin-bottom:14px">Revoir le tuto</button><p class="note">Apparence</p><div class="filt">${['light','dark'].map(k=>`<button data-appmode="${k}" aria-pressed="${(S.mode||'light')===k}"><span class="mdot ${k}"></span>${k==='light'?'Blanc':'Noir'}</button>`).join('')}</div><p class="note">Thème de l'appli</p><div class="sw">${ACCENTS.map(([n,c])=>`<button type="button" data-accent="${c}" aria-label="${n}" title="${n}" aria-pressed="${(S.accent||'#d8c8b0')===c}" style="background:${c}"></button>`).join('')}<label class="cpick" for="themecol" title="Ta propre couleur"><input type="color" id="themecol" value="${S.accent||'#d8c8b0'}" aria-label="Ta propre couleur"></label></div>
+<button class="btn ghost" data-a="restyle">Mon style et mes interdits</button>
+<p class="note">Notif du matin</p><div class="filt">${['7:00','7:30','8:00'].map(x=>`<button data-nh="${x}" aria-pressed="${(S.nh||'7:30')===x}">${x}</button>`).join('')}</div>`);}
+function eveHTML(){const P=S.plan||{when:'soir',occ:'soiree'};const W=WHEN[P.when];const its=S.eve.map(get);const day=(S.cur||[]).map(get);const kept=its.filter(i=>day.includes(i));const changed=its.filter(i=>!day.includes(i));const e=FC[S.wea][W.i];
+  return `<section class="eve"><h1>Ton look <em>${W.l}</em></h1><p class="sub">${esc(OCCN[P.occ]||'')} · ${e[1]}°C${e[2]?' et pluie':''} à ${W.h}. ${kept.length?(changed.length?'On garde '+kept.map(i=>i.name.toLowerCase()).join(' et ')+', on change '+changed.map(i=>i.name.toLowerCase()).join(', ')+'.':'Ton look du jour marche aussi.'):'Un look complet pour ce moment.'}</p>
+  <div class="canvas ${P.when==='soir'?'night':''} ${its.some(i=>i.cat==='outer')?'':'noout'}">${its.map(i=>`<button class="p s-${i.cat}" data-item="${i.id}" aria-label="${esc(i.name)}">${svg(i)}</button>`).join('')}<span class="lbl">${W.n}, ${e[1]}°C</span></div>
+  <div class="row"><button class="btn ghost" data-a="plan">Modifier</button><button class="btn ghost" data-a="noeve">Garder mon look du jour</button></div></section>`;}
+function planSheet(){const P=S.plan||{when:'soir',occ:'soiree'};
+  sheet(`<h2>Ton programme change ?</h2><p class="sub">Dis-nous quand et pour quoi, MaisonFit adapte ton look en gardant ce qui peut l'être.</p>
+  <p class="note">Quand</p><div class="filt" style="flex-wrap:wrap">${Object.keys(WHEN).map(k=>`<button data-pwhen="${k}" aria-pressed="${P.when===k}">${WHEN[k].n}</button>`).join('')}</div>
+  <p class="note">Pour</p><div class="filt" style="flex-wrap:wrap">${Object.keys(OCC).map(k=>`<button data-pocc="${k}" aria-pressed="${P.occ===k}">${esc(OCCN[k])}</button>`).join('')}</div>
+  <button class="btn" data-a="doplan">Adapter mon look</button>`);}
+function today(){
+  if(!S.cur)pick();const w=WEA[S.wea];const its=(S.cur||[]).map(get);const hasOut=its.some(i=>i.cat==='outer');
+  const d=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  const N=notifHTML();const f=FC[S.wea];const now=NOWI[S.hi];
+  return `<div class="demo">Démo, heure ${HRS.map((x,i)=>`<button data-hi="${i}" aria-pressed="${S.hi===i}">${x}</button>`).join('')}</div>
+  <div class="demo"><button data-a="nv">Autre notif</button><button data-a="nset">Réglages notifs</button></div>
+  <div class="notif" role="status" style="${N.quiet?'opacity:.55':''}"><span class="ic">${MONO}</span><span><b>${esc(N.t)}</b><small>${esc(N.m)}</small></span><time>${S.hi===0?(S.nh||'7:30'):HRS[S.hi]}</time>${N.look&&S.cur?`<div class="nlook">${S.cur.map(id=>`<span>${svg(get(id))}</span>`).join('')}</div>`:''}${N.act?`<div class="act"><button data-a="evening">Oui, adapte mon look</button><button data-a="noeve">Non, je reste</button></div>`:''}${N.act2?`<div class="act"><button data-a="wear">Oui, je l'ai porté</button></div>`:''}</div>
+  <div class="brandbar"><span class="logo"><span class="lm">${MONO}</span>MAISONFIT</span><span class="streak">Série ${S.streak} jours</span></div>
+  <div class="hours" aria-label="Météo heure par heure">${f.map((x,i)=>`<div class="${i===now?'now':''}"><span>${i===now?'Maint.':x[0]+'h'}</span>${wic(x[1],x[2],x[0]>=21)}<b>${x[1]}°</b></div>`).join('')}</div>
+  <h1>Ton look <em>${esc(OCCN[S.occ].toLowerCase())}</em> du jour</h1><p class="sub">${d}, Toulouse</p>
+  <div class="filt">${Object.keys(OCC).map(k=>`<button data-occ="${k}" aria-pressed="${S.occ===k}">${esc(OCCN[k])}</button>`).join('')}<button data-a="theme" style="border-style:dashed">+ Personnaliser</button></div>
+  ${S.cur?`<div class="canvas ${hasOut?'':'noout'}">${its.map(i=>`<button class="p s-${i.cat}" data-item="${i.id}" aria-label="${esc(i.name)}">${svg(i)}</button>`).join('')}<span class="lbl">${w.n}</span></div>
+  <p class="why">${esc(why())}</p>
+  <div class="reacts" style="justify-content:center"><span class="note" style="align-self:center">Ce look te plaît ?</span><button data-a="thumbup" aria-label="J'aime ce look">👍</button><button data-a="thumbdown" aria-label="Je n'aime pas ce look">👎</button></div>${S.fb?`<p class="note" style="text-align:center">${esc(S.fb)}</p>`:''}
+  <div class="list">${its.map(i=>`<div class="lrow"><button data-item="${i.id}"><span class="th">${svg(i)}</span><span><b>${esc(i.name)}</b><br><small>${CAT1[i.cat]}</small></span></button><button class="swapb" data-swap="${i.id}">Changer</button></div>`).join('')}${hasOut?'':`<button class="addpiece" data-swap="add-outer">+ Ajouter une veste</button>`}</div>`:`<p class="sub">Pas assez de vêtements pour ce thème. Ajoute-en dans ta garde-robe.</p>`}
+  <div class="ctx"><label for="wea"><span>Météo</span><select id="wea">${Object.keys(WEA).map(k=>`<option value="${k}" ${S.wea===k?'selected':''}>${WEA[k].n}</option>`).join('')}</select></label>
+  <label for="tmp"><span>Ressenti</span><select id="tmp">${["Normal","J'ai souvent froid","J'ai toujours chaud"].map((x,i)=>`<option ${(S.tmp||0)===i?"selected":""}>${x}</option>`).join("")}</select></label></div>
+  ${S.worn?`<div class="done">Look porté aujourd'hui. MaisonFit évitera de te le reproposer trop vite.</div>`:`<div class="row"><button class="btn" data-a="wear">Je porte ce look</button><button class="btn ghost" data-a="reroll">Autre look</button></div>`}
+  ${S.storyToday?'':`<button class="btn ghost" data-a="addstory">Ajouter à ma story 🔥</button>`}
+  <button class="btn soft" data-a="fav">♡ Ajouter à mes favoris</button>
+  ${S.eve?eveHTML():`<button class="btn ghost" data-a="plan">Mon programme change, adapte mon look</button>`}
+  ${S.plus?'':`<p class="cnt">${Math.max(0,1-S.rerolls)} changement de look gratuit aujourd'hui</p>`}`;
+}
+const WK=[{d:'Lun',t:11,r:1},{d:'Mar',t:14,r:0},{d:'Mer',t:16,r:0},{d:'Jeu',t:9,r:1},{d:'Ven',t:13,r:0},{d:'Sam',t:18,r:0},{d:'Dim',t:15,r:0}];
+const DAYL={Lun:'Lundi',Mar:'Mardi',Mer:'Mercredi',Jeu:'Jeudi',Ven:'Vendredi',Sam:'Samedi',Dim:'Dimanche'};
+const wkOf=()=>S.wk||(S.wk=WK.map(x=>({...x})));
+const dayW=i=>{const x=wkOf()[i];return {t:x.t+adj(),r:x.r};};
+const dayOpts=(i,keep)=>{const x=dayW(i);const o=OCC[S.wthemes[i]]?S.wthemes[i]:'cours';const need=(x.t<18||x.r)&&o!=='sport';let l=combos(o,x,need);
+  if(keep){l=l.map(c=>({...c,sc:c.sc+c.ids.filter(id=>keep.includes(id)).length*4})).sort((a,b)=>b.sc-a.sc);}
+  const out=[];for(const c of l){if(!out.some(o2=>o2.join()===c.ids.join()))out.push(c.ids);if(out.length>=3)break;}return out;};
+function planWeek(){S.week=wkOf().map((x,i)=>S.chosen[i]||dayOpts(i)[0]||[]);}
+function suits(ids,w){const its=ids.map(get).filter(Boolean);const ou=its.find(i=>i.cat==='outer'),sh=its.find(i=>i.cat==='shoes'),tp=its.find(i=>i.cat==='top');const why=[];
+  if(w.r&&!(ou&&ou.rain))why.push("aucune veste de pluie");
+  if(w.r&&sh&&sh.col==='blanc')why.push("des baskets blanches sous la pluie");
+  if(w.t<12&&!ou&&!(tp&&tp.w>=2))why.push("rien de chaud");
+  if(w.t<6&&ou&&ou.w<2)why.push("une veste trop légère");
+  if(w.t>22&&tp&&tp.w>=2)why.push("un pull alors qu'il fera chaud");
+  return why;}
+function checkAlerts(){S.alert=null;for(const k of Object.keys(S.chosen)){const i=+k;if(S.kept[i])continue;const why=suits(S.chosen[i],dayW(i));if(why.length){S.alert={i,why};break;}}}
+function changeWeather(){const w=wkOf();const i=5;w[i]={...w[i],t:10,r:1,changed:{t:WK[i].t,r:WK[i].r}};
+  if(!S.chosen[i]){S.chosen[i]=dayOpts(i)[0]||[];S.chosen[i]=(()=>{const save=S.wk;S.wk=WK.map(x=>({...x}));const ids=dayOpts(i)[0]||[];S.wk=save;return ids;})();}
+  delete S.kept[i];checkAlerts();planWeek();}
+const CLIM={paris:[5,6,9,12,16,19,21,21,18,13,8,5],londres:[6,6,8,11,14,17,19,19,16,12,9,6],london:[6,6,8,11,14,17,19,19,16,12,9,6],barcelone:[11,12,14,16,19,23,26,26,23,19,14,11],barcelona:[11,12,14,16,19,23,26,26,23,19,14,11],madrid:[7,8,11,13,17,23,26,26,21,15,10,7],lisbonne:[12,13,15,16,18,21,23,23,22,19,15,12],lisbon:[12,13,15,16,18,21,23,23,22,19,15,12],rome:[8,9,11,14,18,22,25,25,22,17,13,9],milan:[3,5,10,13,18,22,25,24,20,14,8,4],berlin:[1,2,5,10,14,18,20,19,15,10,5,2],amsterdam:[4,4,7,10,13,16,18,18,15,11,7,4],bruxelles:[4,4,7,10,14,16,19,18,15,11,7,4],marrakech:[13,15,18,20,23,27,31,30,27,22,17,14],dubai:[19,21,24,28,32,34,36,36,33,30,25,21],'new york':[1,2,6,12,18,23,26,25,21,15,9,3],tokyo:[6,6,9,15,19,22,26,27,24,18,13,8],oslo:[-3,-3,0,5,11,15,17,16,12,6,1,-2],nice:[9,10,12,14,18,21,24,24,21,17,13,10],marseille:[7,8,11,14,18,22,25,25,21,16,11,8],lyon:[3,5,9,12,16,20,22,22,18,13,7,4],toulouse:[6,7,10,12,16,20,22,22,19,15,9,6],bali:[27,27,27,27,27,26,26,26,27,27,27,27],'los angeles':[14,15,16,17,18,20,22,23,22,20,17,14],montreal:[-10,-8,-2,7,14,19,21,20,15,8,1,-6],maurice:[31,31,30,29,27,26,25,25,26,27,29,30],mauritius:[31,31,30,29,27,26,25,25,26,27,29,30],reunion:[30,30,30,29,27,26,25,25,26,27,28,29],martinique:[28,28,29,29,30,30,30,31,31,30,29,28],guadeloupe:[28,28,29,29,30,30,30,31,31,30,29,28],tahiti:[31,31,31,31,30,29,29,29,29,30,30,31],thailande:[32,33,34,35,34,33,33,32,32,32,32,31],bangkok:[32,33,34,35,34,33,33,32,32,32,32,31],phuket:[32,33,33,33,32,31,31,31,30,30,31,31],miami:[24,25,26,28,30,32,33,33,32,29,27,25],rio:[30,31,30,28,27,26,26,26,26,27,28,29],bresil:[30,31,30,28,27,26,26,26,26,27,28,29],sydney:[26,26,25,23,20,18,17,18,20,22,24,25],australie:[26,26,25,23,20,18,17,18,20,22,24,25],'le cap':[27,27,26,24,21,19,18,19,20,22,24,26],'cape town':[27,27,26,24,21,19,18,19,20,22,24,26],cancun:[28,29,30,31,32,33,33,33,32,31,30,28],mexique:[24,26,28,30,30,28,27,27,26,26,25,24],dakar:[25,25,25,25,26,29,30,30,31,31,29,27],senegal:[25,25,25,25,26,29,30,30,31,31,29,27],tunis:[16,17,19,22,26,30,33,33,30,26,21,17],tunisie:[16,17,19,22,26,30,33,33,30,26,21,17],maroc:[13,15,18,20,23,27,31,30,27,22,17,14],athenes:[13,14,16,20,25,30,33,33,29,24,19,15],grece:[13,14,16,20,25,30,33,33,29,24,19,15],tenerife:[21,21,22,22,24,26,28,29,28,26,24,22],canaries:[21,21,22,22,24,26,28,29,28,26,24,22],maldives:[30,30,31,31,31,30,30,30,30,30,30,30],seychelles:[30,30,31,31,30,29,28,28,29,29,30,30],singapour:[30,31,32,32,32,31,31,31,31,31,31,30],'new delhi':[20,23,29,35,39,38,34,33,33,32,27,22],inde:[20,23,29,35,39,38,34,33,33,32,27,22],egypte:[19,21,24,28,32,34,35,35,33,30,25,21],istanbul:[9,9,11,16,21,26,28,29,25,20,15,11],londre:[6,6,8,11,14,17,19,19,16,12,9,6],espagne:[11,12,14,16,19,23,26,26,23,19,14,11],italie:[8,9,11,14,18,22,25,25,22,17,13,9],portugal:[12,13,15,16,18,21,23,23,22,19,15,12],japon:[6,6,9,15,19,22,26,27,24,18,13,8],'etats-unis':[1,2,6,12,18,23,26,25,21,15,9,3],usa:[1,2,6,12,18,23,26,25,21,15,9,3],canada:[-10,-8,-2,7,14,19,21,20,15,8,1,-6],norvege:[-3,-3,0,5,11,15,17,16,12,6,1,-2],islande:[0,0,1,3,7,10,12,11,8,5,2,0],laponie:[-14,-13,-8,-2,5,11,14,11,6,-1,-7,-11]};
+const WGEO=Object.fromEntries(("afghanistan:34.5:-2:1.5|afrique du sud:-26.2:-3|south africa:-26.2:-3|albanie:41.3|algerie:36.7|allemagne:51:-1:1.2|germany:51:-1:1.2|andorre:42.5:-5|angola:-8.8|arabie saoudite:24.7:3:1.3|argentine:-34.6|argentina:-34.6|armenie:40.2:-4:1.6|australie:-33.9|autriche:48.2:-1:1.3|austria:48.2:-1:1.3|azerbaidjan:40.4|bahamas:25|bahrein:26.2:2|bangladesh:23.8|barbade:13.1|belgique:50.8|belgium:50.8|belize:17.2|benin:6.4|bhoutan:27.5:-10|bielorussie:53.9:-2:1.6|birmanie:16.8|myanmar:16.8|bolivie:-16.5:-14:.6|bosnie:43.9:-2:1.3|botswana:-24.6:1:1.3|bresil:-22.9|brazil:-22.9|brunei:4.9|bulgarie:42.7:-1:1.4|burkina faso:12.4:2|burundi:-3.4:-3|cambodge:11.6|cameroun:3.9|canada:45.5:-6:1.8|cap-vert:14.9|chili:-33.4|chile:-33.4|chine:39.9:-4:1.8|china:39.9:-4:1.8|chypre:35.2:2|colombie:4.7:-13:.5|colombia:4.7:-13:.5|comores:-11.7|congo:-4.3|coree du sud:37.6:-4:1.8|coree:37.6:-4:1.8|korea:37.6:-4:1.8|costa rica:9.9:-5|cote d'ivoire:5.3|croatie:45.8:-1:1.3|croatia:45.8:-1:1.3|cuba:23.1|danemark:55.7|denmark:55.7|djibouti:11.6:3|dominique:15.3|egypte:30:1:1.2|egypt:30:1:1.2|emirats arabes unis:25.2:3:1.2|emirats:25.2:3:1.2|uae:25.2:3:1.2|equateur:-0.2:-14:.5|ecuador:-0.2:-14:.5|erythree:15.3:-7|espagne:40.4:1:1.3|spain:40.4:1:1.3|estonie:59.4:-1:1.4|eswatini:-26.3:-3|etats-unis:40.7:-3:1.6|united states:40.7:-3:1.6|ethiopie:9:-11:.5|ethiopia:9:-11:.5|fidji:-18.1|finlande:60.2:-1:1.5|finland:60.2:-1:1.5|france:48.9|gabon:0.4|gambie:13.5|georgie:41.7:-2:1.4|ghana:5.6|grece:38:2|greece:38:2|grenade:12|guatemala:14.6:-7|guinee:9.5|guyane:4.9|haiti:18.5|honduras:14.1:-4|hongrie:47.5:-1:1.5|hungary:47.5:-1:1.5|inde:28.6:2:1.4|india:28.6:2:1.4|indonesie:-6.2|indonesia:-6.2|irak:33.3:3:1.6|iran:35.7:-1:1.6|irlande:53.3:0:.5|ireland:53.3:0:.5|islande:64.1:0:.7|iceland:64.1:0:.7|israel:31.8:1|italie:41.9|italy:41.9|jamaique:18|japon:35.7:-3:1.3|japan:35.7:-3:1.3|jordanie:31.9|kazakhstan:43.2:-5:2|kenya:-1.3:-8:.5|kirghizistan:42.9:-6:1.8|kosovo:42.7:-3:1.4|koweit:29.4:4:1.5|laos:18|lettonie:56.9:-1:1.4|liban:33.9:2|liberia:6.3|libye:32.9|liechtenstein:47.1:-3|lituanie:54.7:-1:1.4|luxembourg:49.6:-1|macedoine:42:-1:1.4|madagascar:-18.9:-6:.7|malaisie:3.1|malaysia:3.1|malawi:-14:-4|maldives:4.2|mali:12.6:3|malte:35.9:2|malta:35.9:2|maroc:31.6|morocco:31.6|maurice:-20.2|mauritanie:18.1:3|mexique:19.4:-9:.6|mexico:19.4:-9:.6|moldavie:47:-1:1.5|monaco:43.7:1|mongolie:47.9:-10:2.2|montenegro:42.4|mozambique:-25.9|namibie:-22.6:-1:1.2|nepal:27.7:-8:1.2|nicaragua:12.1|niger:13.5:4|nigeria:6.5|norvege:59.9:-1:1.2|norway:59.9:-1:1.2|nouvelle-caledonie:-22.3|nouvelle-zelande:-41.3:-2:.7|new zealand:-41.3:-2:.7|oman:23.6:3|ouganda:0.3:-4|uganda:0.3:-4|ouzbekistan:41.3:-3:1.8|pakistan:33.7:1:1.6|panama:9|paraguay:-25.3|pays-bas:52.4|netherlands:52.4|perou:-12:-9|peru:-12:-9|philippines:14.6|pologne:52.2:-1:1.4|poland:52.2:-1:1.4|polynesie:-17.5|portugal:38.7|qatar:25.3:3:1.2|republique dominicaine:18.5|roumanie:44.4:-1:1.5|romania:44.4:-1:1.5|royaume-uni:51.5|angleterre:51.5|ecosse:55.9:0:.5|united kingdom:51.5|uk:51.5|russie:55.8:-4:1.9|russia:55.8:-4:1.9|rwanda:-1.9:-6|salvador:13.7:-2|senegal:14.7|serbie:44.8:-1:1.5|seychelles:-4.6|sierra leone:8.5|singapour:1.3|singapore:1.3|slovaquie:48.1:-1:1.4|slovenie:46:-1:1.3|somalie:2|soudan:15.5:5|sri lanka:6.9|suede:59.3:-1:1.3|sweden:59.3:-1:1.3|suisse:46.9:-3:1.1|switzerland:46.9:-3:1.1|syrie:33.5:1:1.4|tadjikistan:38.6:-3:1.8|taiwan:25|tanzanie:-6.8|thailande:13.8|thailand:13.8|togo:6.1|trinite-et-tobago:10.7|tunisie:36.8|tunisia:36.8|turquie:41:-2:1.4|turkey:41:-2:1.4|ukraine:50.5:-2:1.6|uruguay:-34.9|venezuela:10.5:-2|vietnam:21:-1:1.3|yemen:15.4:-6|zambie:-15.4:-4|zimbabwe:-17.8:-5|guadeloupe:16.2|martinique:14.6|reunion:-20.9|corse:42|sardaigne:39.2|sicile:38.1:2|crete:35.3:2|baleares:39.6|majorque:39.6|ibiza:38.9|hawaii:21.3:3|californie:34:2|floride:25.8:3|texas:29.8:2:1.3|bretagne:48.1:-1:.7|normandie:49.2:-1:.8|alpes:45.9:-10|new york:40.7:-3:1.6|los angeles:34:2|san francisco:37.8:-2:.5|chicago:41.9:-4:1.9|miami:25.8:3|las vegas:36.2:1:1.6|washington:38.9:-2:1.6|boston:42.4:-4:1.7|seattle:47.6:-1:.8|montreal:45.5:-6:1.8|toronto:43.7:-5:1.6|vancouver:49.3:-1:.7|quebec:46.8:-7:1.9|mexico:19.4:-9:.6|cancun:21.2:2|la havane:23.1|havana:23.1|rio de janeiro:-22.9|sao paulo:-23.6:-2|buenos aires:-34.6|lima:-12:-9|bogota:4.7:-13:.5|santiago:-33.4|cusco:-13.5:-15:.6|quito:-0.2:-14:.5|medellin:6.2:-6:.5|punta cana:18.6|reykjavik:64.1:0:.7|dublin:53.3:0:.5|edimbourg:55.9:0:.5|manchester:53.5:-1:.8|bruxelles:50.8|amsterdam:52.4|copenhague:55.7|stockholm:59.3:-1:1.3|helsinki:60.2:-1:1.5|munich:48.1:-2:1.3|francfort:50.1:-1:1.2|hambourg:53.6:-1:1.1|vienne:48.2:-1:1.3|prague:50.1:-2:1.4|budapest:47.5:-1:1.5|varsovie:52.2:-1:1.4|cracovie:50.1:-2:1.4|zurich:47.4:-3:1.1|geneve:46.2:-2:1.1|venise:45.4:-1:1.2|florence:43.8:-1:1.2|naples:40.9|palerme:38.1:2|seville:37.4:4:1.3|malaga:36.7:2|valence:39.5:1|porto:41.1:-1:.7|faro:37:1|dubrovnik:42.6|split:43.5|athenes:38:2|santorin:36.4:1|mykonos:37.4:1|istanbul:41:-2:1.4|moscou:55.8:-4:1.9|saint-petersbourg:59.9:-4:1.7|kiev:50.5:-2:1.6|le caire:30:1:1.2|cairo:30:1:1.2|tunis:36.8|alger:36.7|casablanca:33.6:-2:.7|agadir:30.4:1:.6|essaouira:31.5:-2:.5|fes:34:1:1.3|tanger:35.8|dakar:14.7|abidjan:5.3|lagos:6.5|nairobi:-1.3:-8:.5|zanzibar:-6.2|le cap:-33.9:-2:.8|cape town:-33.9:-2:.8|johannesburg:-26.2:-3|tel aviv:32.1:1|jerusalem:31.8:-2|beyrouth:33.9:2|doha:25.3:3:1.2|abu dhabi:24.5:3:1.2|riyad:24.7:3:1.3|mumbai:19.1:2:.6|bombay:19.1:2:.6|new delhi:28.6:2:1.4|delhi:28.6:2:1.4|goa:15.5:1|colombo:6.9|male:4.2|kathmandou:27.7:-8:1.2|bangkok:13.8|phuket:7.9|chiang mai:18.8|hanoi:21:-1:1.3|ho chi minh:10.8|saigon:10.8|siem reap:13.4|kuala lumpur:3.1|bali:-8.7|jakarta:-6.2|manille:14.6|hong kong:22.3:-1:1.2|shanghai:31.2:-2:1.5|pekin:39.9:-4:1.8|beijing:39.9:-4:1.8|seoul:37.6:-4:1.8|tokyo:35.7:-3:1.3|kyoto:35:-3:1.4|osaka:34.7:-2:1.4|taipei:25|singapour:1.3|sydney:-33.9|melbourne:-37.8:-2:.9|brisbane:-27.5:2|perth:-31.9:1|auckland:-36.8:-2:.6|papeete:-17.5|noumea:-22.3|honolulu:21.3:3|port-louis:-20.2|saint-denis:-20.9|pointe-a-pitre:16.2|fort-de-france:14.6|mahe:-4.6|bordeaux:44.8|nantes:47.2|rennes:48.1:-1:.7|lille:50.6|strasbourg:48.6:-2:1.3|montpellier:43.6:1|biarritz:43.5|ajaccio:41.9:1|chamonix:45.9:-11|annecy:45.9:-3|grenoble:45.2:-1:1.3|avignon:43.9:1:1.2|cannes:43.6:1|saint-tropez:43.3:1").split('|').filter(Boolean).map(s=>{const a=s.split(':');return [a[0],a.slice(1).map(Number)];}));
+function climFor(c,m){let g=WGEO[c];if(!g){const k=Object.keys(WGEO).filter(k=>k.length>3&&c.includes(k)).sort((a,b)=>b.length-a.length)[0];g=k&&WGEO[k];}if(!g)return null;const [lat,off=0,ax=1]=g;const a=Math.abs(lat);const mean=(a<20?27:27-(a-20)*.55)+off;const amp=(a<15?1:(a-15)*.25+1)*ax;const pk=lat>=0?6.5:0.5;return Math.round(mean+amp*Math.cos(2*Math.PI*(m-pk)/12)+3);}
+const known=c=>!!(CLIM[c]||Object.keys(CLIM).find(k=>c.includes(k))||climFor(c,0)!=null);
+const LIVE={};const GEO={maurice:[-20.16,57.5,'Port-Louis, Maurice'],'ile maurice':[-20.16,57.5,'Port-Louis, Maurice'],mauritius:[-20.16,57.5,'Port-Louis, Maurice'],reunion:[-20.88,55.45,'Saint-Denis, La Réunion'],'la reunion':[-20.88,55.45,'Saint-Denis, La Réunion'],'ile de la reunion':[-20.88,55.45,'Saint-Denis, La Réunion'],thailande:'Bangkok',bresil:'Rio de Janeiro',australie:'Sydney',mexique:'Mexico City',senegal:'Dakar',tunisie:'Tunis',maroc:'Marrakech',grece:'Athens',canaries:'Tenerife',inde:'New Delhi',egypte:'Cairo',espagne:'Madrid',italie:'Rome',portugal:'Lisbon',japon:'Tokyo','etats-unis':'New York',usa:'New York',canada:'Montreal',norvege:'Oslo',islande:'Reykjavik',laponie:'Rovaniemi'};
+async function fetchLive(){const T=S.trip;const ds=tripDays(T);if(!ds.length)return;const key=norm(T.city);if(LIVE[key]&&LIVE[key].st!=='err'&&ds.every(d=>LIVE[key].d&&LIVE[key].d[d]))return;
+  LIVE[key]={st:'load',d:{}};render();
+  const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),6000);
+  try{const q=GEO[key]||T.city;let r;if(Array.isArray(q))r={latitude:q[0],longitude:q[1],name:q[2]};else{const g=await (await fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&language=fr&name='+encodeURIComponent(q),{signal:ctl.signal})).json();r=g.results&&g.results[0];}if(!r)throw 0;
+    const today=iso(new Date()),end=addD(today,15);const st=ds[0]<today?today:ds[0],en=ds[ds.length-1]>end?end:ds[ds.length-1];
+    if(st<=en){const f=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${r.latitude}&longitude=${r.longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&start_date=${st}&end_date=${en}`,{signal:ctl.signal})).json();
+      const D=f.daily;D.time.forEach((d,i)=>{LIVE[key].d[d]={t:Math.round((D.temperature_2m_max[i]*2+D.temperature_2m_min[i])/3),r:(D.precipitation_probability_max[i]||0)>=50?1:0};});}
+    LIVE[key].st='ok';LIVE[key].place=r.name+(r.country?', '+r.country:'');
+  }catch(e){LIVE[key].st='err';}
+  clearTimeout(to);if(S.trip&&S.trip.plan&&norm(S.trip.city)===key){packTrip();}if(S.tab==='trip')render();}
+const hsh=s=>{let x=0;for(const c of s)x=(x*31+c.charCodeAt(0))|0;return Math.abs(x);};
+const norm=s=>s.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+function wxFor(city,ds){const d=new Date(ds+'T12:00');const c=norm(city);const L=LIVE[c];if(L&&L.d&&L.d[ds])return L.d[ds];const m=d.getMonth();const base=(CLIM[c]||CLIM[Object.keys(CLIM).find(k=>c.includes(k))]||null);const cf=base?null:climFor(c,m);const b=base?base[m]:cf!=null?cf:[8,9,12,15,19,23,26,26,22,17,12,9][m];const v=hsh(c+ds);return {t:b+(v%5)-2,r:v%10<(b>24?1:b<8?3:4)?1:0};}
+const iso=d=>d.toISOString().slice(0,10);
+const addD=(s,n)=>{const d=new Date(s+'T12:00');d.setDate(d.getDate()+n);return iso(d);};
+const DAYS=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+const SUIT='<rect x="4" y="7" width="16" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M9 7V4.5h6V7M9 11v5M15 11v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>';
+const TOCC=['weekend','date','soiree','travail','sport'];
+function tripDays(T){if(!T.city||!T.from||!T.to||T.to<T.from)return [];const n=Math.min(14,Math.round((new Date(T.to)-new Date(T.from))/864e5)+1);return Array.from({length:n},(_,i)=>addD(T.from,i));}
+function packTrip(){const T=S.trip,packed=new Set(),days=[];const ds=tripDays(T);if(!ds.length)return;
+  for(let i=0;i<ds.length;i++){const w=wxFor(T.city,ds[i]);const o=(i===0||i===ds.length-1)?'voyage':T.occ;const need=w.t<18||w.r;
+    let list=combos(o,w,need);if(!list.length)list=combos(o,w,false);if(!list.length)list=combos('weekend',w,false);
+    list.forEach(c=>{c.ids.forEach(id=>{if(packed.has(id)){const k=get(id).cat;c.sc+=(k==='shoes'||k==='outer')?7:2.5;}});if(days.some(d=>d.ids.join()===c.ids.join()))c.sc-=20;});
+    list.sort((a,b)=>b.sc-a.sc);const c=list[0];if(c)c.ids.forEach(id=>packed.add(id));days.push({d:ds[i],w,o,ids:c?c.ids:[]});}
+  T.plan=days;T.packed=[];}
+function trip(){if(S.trip&&S.trip.city&&!LIVE[norm(S.trip.city)])setTimeout(fetchLive,0);if(!S.trip||S.trip.dest)S.trip={city:'',from:addD(iso(new Date()),7),to:addD(iso(new Date()),10),occ:'weekend',plan:null,packed:[]};const T=S.trip;const ds=tripDays(T);const nd=ds.length;
+  let body='';
+  if(T.plan){const ids=[...new Set(T.plan.flatMap(d=>d.ids))].filter(get).sort((a,b)=>['outer','top','bottom','shoes'].indexOf(get(a).cat)-['outer','top','bottom','shoes'].indexOf(get(b).cat));
+    const rain=T.plan.some(d=>d.w.r);const ess=[['Sous-vêtements','×'+T.plan.length],['Chaussettes','×'+T.plan.length],['Pyjama',''],['Trousse de toilette',''],['Chargeur',''],["Papiers d'identité",'']].concat(rain?[['Parapluie','']]:[]);
+    const tot=ids.length+ess.length,done=T.packed.length,pc=Math.round(done/tot*100);
+    body=`<h2>Dans ta valise</h2><p class="sub">${ids.length} pièces · ${done}/${tot} rangées</p><div class="pbar"><i style="width:${pc}%"></i></div>
+    <div class="pk">${ids.map(id=>{const it=get(id),on=T.packed.includes('i'+id);return `<button data-pk="i${id}" aria-pressed="${on}">${svg(it)}<span>${esc(it.name)}</span><em>${on?'✓':''}</em></button>`;}).join('')}</div>
+    <p class="note">Les essentiels</p><div class="ess">${ess.map((e,k)=>{const on=T.packed.includes('e'+k);return `<button data-pk="e${k}" aria-pressed="${on}"><em>${on?'✓':''}</em><span>${e[0]}</span> ${e[1]}</button>`;}).join('')}</div>
+    ${done===tot?'<p class="note" style="text-align:center;font-family:\'Bodoni Moda\',serif;font-style:italic;font-size:16px;color:var(--ink)">Valise bouclée. Bon voyage !</p>':''}
+    <h2>Tes looks jour par jour</h2>
+    ${T.plan.map((x,i)=>`<div class="day"><span class="dn">${+x.d.slice(8)}<small>${DAYS[new Date(x.d+'T12:00').getDay()]}<br>${x.w.t}°C${x.w.r?', pluie':''}</small></span><div><div class="top"><span class="th">${esc(OCCN[x.o])}</span>${wic(x.w.t,x.w.r,false).replace('<svg ','<svg width="24" height="24" ')}</div><div class="lk">${x.ids.map(id=>get(id)?svg(get(id)):'').join('')}</div></div></div>`).join('')}`;}
+  return `<button class="btn ghost" data-tab="week">‹ Retour à ma semaine</button>
+  <h1>Ma <em>valise</em></h1><p class="sub">Dis où tu pars et quand, MaisonFit regarde la météo sur place et fait ta valise.</p>
+  <p class="note">Destination</p><input class="tin" id="tcity" type="text" placeholder="Ville ou pays" value="${esc(T.city)}" autocomplete="off">
+  <div class="tdates"><label><span class="note">Aller</span><input class="tin" id="tfrom" type="date" min="${iso(new Date())}" value="${T.from}"></label><label><span class="note">Retour</span><input class="tin" id="tto" type="date" min="${T.from}" value="${T.to}"></label></div>
+  ${T.city&&nd?(()=>{const ws=ds.map(d=>wxFor(T.city,d));const lo=Math.min(...ws.map(w=>w.t)),hi=Math.max(...ws.map(w=>w.t)),rn=ws.filter(w=>w.r).length;return `<div class="twx">${wic(Math.round((lo+hi)/2),rn>nd/2,false).replace('<svg ','<svg width="30" height="30" ')}<span><b>${esc(T.city)} · ${nd} jours</b><small>Entre ${lo}°C et ${hi}°C${rn?` · pluie prévue ${rn} jour${rn>1?'s':''}`:' · pas de pluie prévue'}</small>${(()=>{const L=LIVE[norm(T.city)];const all=L&&L.d&&ds.every(d=>L.d[d]);return `<small class="src">${!L||L.st==='load'?'Chargement de la météo en direct…':L.st==='ok'?(all?'Météo en direct':'En direct jusqu\'à 16 jours, puis moyenne de saison')+' · '+esc(L.place):(known(norm(T.city))?'Moyenne de saison · la météo en direct arrive avec la vraie appli':'Destination non reconnue, vérifie l\'orthographe')}</small>`;})()}</span></div>`;})():''}
+  <p class="note">Sur place</p><div class="filt" style="flex-wrap:wrap">${TOCC.map(k=>`<button data-tocc="${k}" aria-pressed="${T.occ===k}">${esc(OCCN[k])}</button>`).join('')}</div>
+  ${T.city&&nd?`<button class="btn" data-a="packtrip">${T.plan?'Refaire ma valise':'Faire ma valise'}</button>`:`<p class="note" style="text-align:center">Écris ta destination et choisis tes dates.</p>`}${body}`;}
+function week(){
+  wkOf();if(!S.week)planWeek();const A=S.alert;const W=wkOf();
+  return `${A?`<div class="notif" role="status"><span class="ic">${MONO}</span><span><b>${(S.voice||'bff')==='sobre'?DAYL[W[A.i].d]+', la météo a changé':esc(VOICES[S.voice||'bff'].week(DAYL[W[A.i].d]))}</b><small>${W[A.i].t}°C${W[A.i].r?' et pluie':''} au lieu de ${W[A.i].changed?W[A.i].changed.t+'°C'+(W[A.i].changed.r?' et pluie':' et soleil'):'prévu'}. Ton look prévu → ${esc(A.why.join(', '))}. Tu veux le changer ?</small></span><time>Veille 19:00</time><div class="act"><button data-a="adapt" data-i="${A.i}">Voir une proposition</button><button data-a="keep" data-i="${A.i}">Garder mon look</button></div></div>`:''}
+  <h1>Ta <em>semaine</em></h1><p class="sub">Choisis tes looks à l'avance. Si la météo change, MaisonFit te prévient la veille au soir.</p>
+  <button class="tripcard" data-tab="trip"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true">${SUIT}</svg></span><span><b>Tu pars en voyage ?</b><small>MaisonFit prépare ta valise</small></span><span class="ar">›</span></button>
+  ${W.map((x,i)=>{const lock=!S.plus&&i>=3;const mine=!!S.chosen[i];return `<div class="day ${lock?'blur':''}"><span class="dn">${x.d}<small>${x.t}°C${x.r?', pluie':''}</small>${x.changed?'<small class="chg">Météo changée</small>':''}</span><div><div class="top"><button class="th" data-wt="${i}">${esc(OCCN[S.wthemes[i]]||'Cours')}</button>${wic(x.t,x.r,false).replace('<svg ','<svg width="24" height="24" ')}</div><button class="ch" data-pickday="${i}" aria-label="Choisir le look de ${DAYL[x.d]}"><div class="lk ${mine?'mine':''}">${(S.week[i]||[]).map(id=>get(id)?svg(get(id)):'').join('')}</div><span class="mine-t">${mine?'Choisi par toi ✓ · modifier':'Proposé par MaisonFit · touche pour choisir'}</span></button></div></div>`;}).join('')}
+  ${S.plus?'':`<button class="btn" data-a="pay" data-r="Planifie toute ta semaine avec MaisonFit+">Débloquer jeudi à dimanche</button>`}
+  <button class="btn ghost" data-a="wxchange">Démo · la météo de samedi change</button>
+  <h2>Ton journal de looks</h2><p class="sub">Chaque look porté est gardé ici. Série actuelle ${S.streak} jours.</p>
+  <div class="cal">${Array.from({length:28},(_,i)=>`<span class="${i<S.journal.length&&S.journal[i]?'on':''} ${i===S.journal.length-(S.wornToday?1:0)?'td':''}"></span>`).join('')}</div>`;
+}
+function daySheet(i,keep){const x=wkOf()[i];const opts=dayOpts(i,keep);
+  sheet(`<h2>${DAYL[x.d]} · ${esc(OCCN[S.wthemes[i]]||'Cours')}</h2><p class="sub">${x.t}°C${x.r?' et pluie':''} prévus. ${keep?'Propositions proches de ton look, adaptées à la nouvelle météo.':'Choisis ton look, il sera prêt le matin.'}</p>
+  <div class="olist">${opts.map((ids,k)=>`<button class="pick" data-choose="${i}" data-ids="${ids.join(',')}">${ids.map(id=>svg(get(id))).join('')}<span>${k===0?'Top':'Choisir'}</span></button>`).join('')}</div>
+  <button class="btn ghost" data-a="moreday" data-i="${i}">Autres propositions</button>`);}
+const T=(cat,shape,col)=>({cat,shape,col,name:''});
+const PG={lea:'f',ines:'f',hugo:'h',sofia:'f',maelys:'f',tom:'h',nina:'f',yanis:'h',camille:'f',jules:'h',ambre:'f'};
+const PEOPLE={lea:{n:'Léa',c:'#b98b82',city:'Toulouse',st:'Chic',fr:1},ines:{n:'Inès',c:'#5c6b8a',city:'Toulouse',st:'Streetwear',fr:1},hugo:{n:'Hugo',c:'#7f8f6a',city:'Toulouse',st:'Casual',fr:1},sofia:{n:'Sofía',c:'#a3634b',city:'Madrid',st:'Bohème',fr:1},
+ maelys:{n:'maelys.lyon',c:'#8c6d9e',city:'Lyon',st:'Chic',f:12400,bio:'Étudiante en mode. Un look par jour, zéro budget.',looks:214},tom:{n:'tom_paris',c:'#3f4f5f',city:'Paris',st:'Streetwear',f:48100,bio:'Sneakers et couleurs qui claquent.',looks:530},nina:{n:'nina.bcn',c:'#c48a5a',city:'Barcelone',st:'Bohème',f:7900,bio:'Voyages et valises minimalistes.',looks:122},yanis:{n:'yanis.mrs',c:'#6a7a8a',city:'Marseille',st:'Sporty',f:3200,bio:'Sport chic, même pour courir.',looks:87},
+ camille:{n:'Camille',c:'#9e7b6b',city:'Toulouse',st:'Chic'},jules:{n:'Jules',c:'#56707a',city:'Toulouse',st:'Casual'},ambre:{n:'Ambre',c:'#b0868f',city:'Bordeaux',st:'Bohème'}};
+const POSTS=[
+ {id:1,u:'lea',f:1,occ:'Cours',cap:'Trench du lundi, ça ne rate jamais',items:[T('top','pull','beige'),T('bottom','jean','denim'),T('shoes','boot','noir'),T('outer','coat','beige')],r:[12,4,1]},
+ {id:2,u:'ines',f:1,occ:'Soirée',cap:'Ce soir c\'est cuir et rien d\'autre',items:[T('top','cami','noir'),T('bottom','jean','noir'),T('shoes','boot','noir'),T('outer','jacket','bordeaux')],r:[18,7,3]},
+ {id:3,u:'hugo',f:1,occ:'Travail',cap:'Premier jour de stage, on reste simple',items:[T('top','shirt','ciel'),T('bottom','pant','beige'),T('shoes','loaf','marron')],r:[9,2,0]},
+ {id:4,u:'maelys',f:0,occ:'Date',cap:'Rose et noir, la valeur sûre',items:[T('top','pull','rose'),T('bottom','skirt','noir'),T('shoes','boot','noir'),T('outer','jacket','noir')],r:[842,120,31]},
+ {id:5,u:'tom',f:0,occ:'Week-end',cap:'Baskets jaunes pour réveiller le gris',items:[T('top','pull','gris'),T('bottom','jean','denim'),T('shoes','sneak','jaune'),T('outer','puffer','noir')],r:[1204,233,88]},
+ {id:6,u:'nina',f:0,occ:'Voyage',cap:'Valise pour 3 jours, 1 seule paire de chaussures',items:[T('top','shirt','blanc'),T('bottom','pant','beige'),T('shoes','sneak','blanc')],r:[503,61,12]},
+ {id:7,u:'sofia',f:1,occ:'Cours',cap:'Sauge et beige, mon combo préféré',items:[T('top','pull','sauge'),T('bottom','pant','beige'),T('shoes','loaf','marron'),T('outer','coat','beige')],r:[15,5,2]},
+ {id:8,u:'yanis',f:0,occ:'Sport',cap:'Même pour courir on soigne le look',items:[T('top','tee','gris'),T('bottom','pant','gris'),T('shoes','sneak','blanc'),T('outer','puffer','noir')],r:[377,40,9]}];
+const RX=['🔥','😍','👀'];
+const CM0={1:[{u:'ines',t:'Le trench 😍'},{u:'hugo',t:'Classique mais efficace'}],2:[{u:'lea',t:'La veste !!! La réf stp 🙏'},{u:'ines',t:'Friperie Saint-Cyprien, 45 €, dernière taille 😏'}],3:[{u:'sofia',t:'Bon courage pour ton stage !'}],
+ 4:[{u:'tom',t:'Rose et noir, imbattable'},{u:'nina',t:'La jupe est de quelle marque ?'},{u:'maelys',t:'Toutes les réfs sont taguées sur le look 🤍'}],5:[{u:'yanis',t:'Les baskets jaunes 🔥'},{u:'maelys',t:'Tu oses tout et ça marche'}],6:[{u:'tom',t:'Une seule paire pour 3 jours, respect'}],7:[{u:'lea',t:'Le combo sauge et beige 😍'}],8:[{u:'nina',t:'Même en sport, la classe'}]};
+const SHOPS=['Friperie Saint-Cyprien','Vinted','Zara','Sézane','Uniqlo','Mango','Marché de Saint-Sernin'];
+const PRICES={top:[25,35,45],bottom:[39,49,79],shoes:[59,89,120],outer:[45,79,129]};
+const NOUN={tee:['T-shirt','m'],pull:['Pull','m'],shirt:['Chemise','f'],cami:['Top','m'],jean:['Jean','m'],pant:['Pantalon','m'],skirt:['Jupe','f'],sneak:['Baskets','fp'],boot:['Bottines','fp'],loaf:['Mocassins','mp'],coat:['Trench','m'],jacket:['Veste','f'],puffer:['Doudoune','f']};
+const CADJ={noir:['noir','noire'],blanc:['blanc','blanche'],gris:['gris','grise'],denim:['bleu','bleue'],rose:['rose','rose'],jaune:['jaune','jaune'],beige:['beige','beige']};
+const cname=(shape,col)=>{const [n,g]=NOUN[shape];const a=CADJ[col];let adj=a?a[g[0]==='f'?1:0]:({ciel:'bleu ciel'}[col]||col);if(a&&g[1]==='p'&&!/s$/.test(adj))adj+='s';return n+' '+adj;};
+const refsOf=p=>p.items.map((it,k)=>({it,name:cname(it.shape,it.col),shop:SHOPS[(p.id*3+k)%SHOPS.length],price:PRICES[it.cat][(p.id+k)%3]+' €'}));
+const tagged=p=>isPub(p.u)||(S.refGiven||{})[p.id];
+const cmOf=id=>(S.cms=S.cms||{},S.cms[id]||(S.cms[id]=(CM0[id]||[]).map(c=>({...c}))));
+const FST0={lea:23,ines:8,hugo:41,sofia:3};const POSTED={lea:1,ines:1,hugo:0,sofia:1};
+const STORYPOST={lea:1,ines:2,hugo:3,sofia:7};const AGO={lea:'il y a 2 h',ines:'il y a 40 min',hugo:'hier',sofia:'il y a 5 h'};
+const kf=n=>n>=1000?(n/1000).toFixed(1).replace('.',',').replace(',0','')+' k':String(n);
+const isPub=u=>u!=='me'&&!PEOPLE[u].fr&&PEOPLE[u].f;
+const following=u=>(S.follow||[]).includes(u);
+const fst=k=>(S.fst||(S.fst={...FST0}))[k];
+const avatar=u=>u==='me'&&S.avatar?`<span class="av" style="padding:0;overflow:hidden;background:none">${avatarSVG(S.avatar)}</span>`:`<span class="av" style="background:${u==='me'?'var(--ink)':PEOPLE[u].c}">${u==='me'?'C':PEOPLE[u].n[0].toUpperCase()}</span>`;
+const canvasOf=(items,cls='')=>`<div class="canvas ${items.some(i=>i.cat==='outer')?'':'noout'} ${cls}">${items.map(i=>`<span class="p s-${i.cat}">${svg(i)}</span>`).join('')}</div>`;
+const allPosts=()=>[...(S.myposts||[]),...POSTS];
+function storyView(k){const ks=Object.keys(FST0);const i=ks.indexOf(k);S.seenS=S.seenS||[];if(!S.seenS.includes(k))S.seenS.push(k);
+  const p=POSTS.find(x=>x.id===STORYPOST[k]);const its=k==='me'?S.myStory:p.items;const nm=k==='me'?'Ta story':PEOPLE[k].n;
+  ov.innerHTML=`<div class="sv" role="dialog" aria-modal="true" aria-label="Story de ${esc(nm)}"><div class="bars">${(k==='me'?['me']:ks).map(x=>`<i class="${x===k||ks.indexOf(x)<i?'on':''}"></i>`).join('')}</div>
+  <div class="sh">${avatar(k)}<span><b>${esc(nm)}</b><small>${k==='me'?'à l\'instant':AGO[k]} · ${k==='me'?'🔥 '+S.streak+' jours':'🔥 '+fst(k)+' jours ensemble'}</small></span><button class="x" data-closesv aria-label="Fermer">✕</button></div>
+  <div class="stage">${k==='me'?'':`<button class="tapl" data-story="${ks[Math.max(0,i-1)]}" aria-label="Story précédente"></button><button class="tapr" data-story="${i<ks.length-1?ks[i+1]:''}" aria-label="Story suivante"></button>`}${canvasOf(its,'night')}<p class="scap">${esc(k==='me'?'Look du jour':p.cap)}</p>${k!=='me'&&!POSTED[k]?'<div class="sinfo">Story d\'hier. Hugo n\'a pas encore posté aujourd\'hui ⌛</div>':''}${k==='me'?`<div class="sinfo">Vu par ${Object.keys(FST0).filter(x=>POSTED[x]).map(x=>PEOPLE[x].n).join(', ')}</div>`:''}</div>
+  ${k==='me'?'':`<form class="sfoot" id="svf" data-to="${k}"><input id="svmsg" placeholder="Répondre à ${esc(nm)}…" aria-label="Répondre" autocomplete="off"><button type="button" data-svr="🔥" aria-label="Flamme">🔥</button><button type="button" data-svr="😍" aria-label="J'adore">😍</button></form>`}</div>`;}
+function social(){
+  const fd=S.feed||'friends';const fr=fd==='friends';const friends=Object.keys(PEOPLE).filter(k=>PEOPLE[k].fr||(S.added||[]).includes(k));
+  const list=allPosts().filter(p=>fd==='friends'?(p.u==='me'||friends.includes(p.u)):fd==='follow'?(p.u!=='me'&&following(p.u)):(p.u==='me'?p.pub:true));
+  if(fd==='all'&&(S.gender==='f'||S.gender==='h'))list.sort((a,b)=>(PG[b.u]===S.gender)-(PG[a.u]===S.gender));
+  return `<div class="brandbar"><h1>Le <em>social</em></h1></div>
+  <div class="seg seg3"><button data-feed="friends" aria-pressed="${fd==='friends'}">Amis</button><button data-feed="follow" aria-pressed="${fd==='follow'}">Abonnements</button><button data-feed="all" aria-pressed="${fd==='all'}">Pour toi</button></div>
+  ${fr?`<div class="stories"><button class="story" data-a="${S.storyToday?'mystory':'addstory'}"><span class="ring ${S.storyToday?'mine':'add'}" style="${S.storyToday?'':'border-style:solid'}">${S.storyToday?avatar('me'):'+'}${S.storyToday?'':''}</span>Ta story</button>${Object.keys(FST0).map(k=>`<button class="story" data-story="${k}"><span class="ring ${(S.seenS||[]).includes(k)?'seen':''}">${avatar(k)}</span>${esc(PEOPLE[k].n)}<span class="flame">${POSTED[k]?'🔥':'⌛'} ${fst(k)}</span></button>`).join('')}<button class="story" data-a="addf"><span class="ring add">+</span>Amis</button></div>
+  <div class="streakbox"><span><b>${S.storyToday?'Flammes gardées 🔥':'Garde tes flammes'}</b></span><span class="sub">${S.storyToday?'Ton look du jour est en story. Tu as gardé tes flammes avec '+Object.keys(FST0).filter(k=>POSTED[k]).map(k=>PEOPLE[k].n).join(', ')+'.':'Poste ton look en story avant minuit pour garder tes flammes. Avec Hugo ⌛, ta série de 41 jours va s\'éteindre s\'il ne poste pas non plus.'}</span></div>`:`${fd==='all'?`<p class="sub">Les looks de toute la communauté. Suis les stylistes qui t'inspirent.</p><h2>Stylistes du moment</h2><div class="creators">${Object.keys(PEOPLE).filter(isPub).sort((a,b)=>PEOPLE[b].f-PEOPLE[a].f).map(k=>`<div class="creator">${avatar(k)}<button class="namebtn" data-prof="${k}"><b>${esc(PEOPLE[k].n)}</b></button><small>${kf(PEOPLE[k].f+(following(k)?1:0))} abonnés · ${esc(PEOPLE[k].st)}</small><button class="fol" data-follow="${k}" aria-pressed="${following(k)}" style="margin:4px 0 0">${following(k)?'Abonné':'Suivre'}</button></div>`).join('')}</div>`:(S.follow||[]).length?'':`<p class="sub">Tu ne suis encore personne. Va dans « Pour toi » et suis les stylistes qui t'inspirent.</p>`}`}
+  <button class="btn" data-a="post">Publier mon look</button>
+  ${list.map(p=>postHTML(p,fr)).join('')}`;
+}
+function postHTML(p,fr){const u=p.u==='me'?{n:'Toi',city:'Toulouse',st:PSTYLE[S.pstyle||'chic'].n+(p.pub?' · Public':' · Amis')}:PEOPLE[p.u];const mine=(S.rx||{})[p.id];
+  return `<article class="post"><div class="ph2">${avatar(p.u)}<span><button class="namebtn" data-prof="${p.u}"><b>${esc(u.n)}</b></button>${isPub(p.u)?` · <small style="display:inline">${kf(PEOPLE[p.u].f+(following(p.u)?1:0))} abonnés</small>`:''}<small>${esc(u.city)} · ${esc(p.occ)} · ${esc(u.st)}</small></span>${isPub(p.u)?`<button class="fol" data-follow="${p.u}" aria-pressed="${following(p.u)}">${following(p.u)?'Abonné':'Suivre'}</button>`:''}<button class="more" data-report="${p.id}" aria-label="Signaler">···</button></div>
+  <div style="position:relative">${canvasOf(p.items)}${p.u!=='me'&&tagged(p)?`<button class="refpill" data-cm="${p.id}" data-refs="1">${p.items.length} réfs taguées</button>`:''}</div>
+  ${p.cap?`<p class="cap2"><b>${esc(u.n)}</b> ${esc(p.cap)}</p>`:''}
+  <div class="reacts">${RX.map((e,i)=>`<button data-rx="${p.id}" data-k="${i}" aria-pressed="${mine===i}">${e} ${p.r[i]+(mine===i?1:0)}</button>`).join('')}<button data-cm="${p.id}">💬 ${cmOf(p.id).length}</button>${p.u!=='me'&&!tagged(p)?`<button data-askref="${p.id}">La réf stp 🙏</button>`:''}
+  ${p.u!=='me'?(fr?`<button data-cmp="${p.id}">Comparer</button>`:`<button data-recreate="${p.id}">Recréer avec mes vêtements</button>`):''}</div></article>`;}
+function commentsSheet(id){const p=allPosts().find(x=>x.id===id);const au=p.u==='me'?'Toi':PEOPLE[p.u].n;const cs=cmOf(id);
+  sheet(`<h2>Commentaires</h2>
+  ${p.u!=='me'?(tagged(p)?`<div class="refs" id="refsbox"><b>Les références du look</b>${refsOf(p).map(r=>`<div class="ref"><span class="th">${svg(r.it)}</span><span><b style="font-size:14px">${esc(r.name)}</b><small>${esc(r.shop)}</small></span><span class="pr">${esc(r.price)}</span></div>`).join('')}<p class="note">Références ajoutées par ${esc(au)}.</p></div>`:`<div class="refs"><b>Pas encore de références</b><span class="sub">${(S.refAsked||{})[id]?esc(au)+' a reçu ta demande, la réponse arrive.':'Demande-les à '+esc(au)+', les réfs s\'afficheront ici.'}</span>${(S.refAsked||{})[id]?'':`<button class="btn" data-askref="${id}">La réf stp 🙏</button>`}</div>`):''}
+  <div class="cms">${cs.length?cs.map(c=>`<div class="cm ${c.u===p.u?'auth':''}">${avatar(c.u)}<p><b>${c.u==='me'?'Toi':esc(PEOPLE[c.u].n)}</b> ${esc(c.t)}<br><small>${c.ago||'il y a 1 h'}</small></p></div>`).join(''):'<p class="sub">Aucun commentaire. Sois le premier ou la première.</p>'}</div>
+  <div class="qr">${['La réf stp 🙏','Trop beau 😍','Ça va avec quoi ?','Je copie demain'].map(q=>`<button data-cq="${id}" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+  <form class="cmf" id="cmf" data-id="${id}"><input id="cmin" maxlength="200" placeholder="Ajouter un commentaire…" aria-label="Commentaire" autocomplete="off"><button type="submit" aria-label="Publier">↑</button></form>`);
+  if(S.cmScroll){const r=document.getElementById('refsbox');if(r&&r.scrollIntoView)r.scrollIntoView();S.cmScroll=0;}}
+function addComment(id,t){const p=allPosts().find(x=>x.id===id);const cs=cmOf(id);cs.push({u:'me',t,ago:'à l\'instant'});
+  const isRef=/r[ée]f/i.test(t);if(isRef&&p.u!=='me'&&!tagged(p)){S.refAsked=S.refAsked||{};S.refAsked[id]=1;}
+  commentsSheet(id);render();
+  if(p.u==='me')return;
+  setTimeout(()=>{if(isRef&&!tagged(p)){S.refGiven=S.refGiven||{};S.refGiven[id]=1;cs.push({u:p.u,t:'Et voilà, j\'ai tagué toutes les réfs sur le look 🤍',ago:'à l\'instant'});}
+    else cs.push({u:p.u,t:/quoi/i.test(t)?'Avec un jean brut et des bottines noires, ça marche à tous les coups':'Merci 🥹',ago:'à l\'instant'});
+    render();if(document.getElementById('cmf'))commentsSheet(id);},1500);}
+function recreate(p){const used=[];return p.items.map(t=>{const c=S.items.filter(i=>i.cat===t.cat&&!isDirty(i.id));const best=c.map(i=>({i,s:(i.col===t.col?3:0)+(i.shape===t.shape?2:0)+(NEUTRAL.includes(i.col)&&NEUTRAL.includes(t.col)?1:0)})).sort((a,b)=>b.s-a.s)[0];return best?best.i:null;}).filter(Boolean);}
+function compareSheet(id){const p=allPosts().find(x=>x.id===id);if(!p)return;if(!S.cur)pick();const me=S.cur.map(get);const u=PEOPLE[p.u];
+  const shared=me.filter(a=>p.items.some(b=>b.cat===a.cat&&b.col===a.col));const sameCol=Math.round(100*me.filter(a=>p.items.some(b=>b.col===a.col)).length/me.length);
+  sheet(`<h2>Toi vs ${esc(u.n)}</h2><div class="vs"><div>${canvasOf(me)}<p class="who">Toi</p></div><b class="v">vs</b><div>${canvasOf(p.items)}<p class="who">${esc(u.n)}</p></div></div>
+  <div class="stat"><span>Couleurs en commun</span><b>${sameCol} %</b></div>
+  <p class="sub">${shared.length?'Vous portez tous les deux '+shared.map(i=>i.name.toLowerCase()).join(' et ')+'. Twinning ou coïncidence ?':'Aucune pièce en commun aujourd\'hui. Deux styles, zéro risque de twinning.'}</p>
+  <p class="note">Duel de looks, tes amis votent</p><div class="row"><button class="btn" data-vote="me">Voter pour moi 😏</button><button class="btn ghost" data-vote="them">Voter pour ${esc(u.n)}</button></div>`);}
+function addFriendSheet(){const sugg=['camille','jules','ambre'];
+  sheet(`<h2>Ajouter des amis</h2><input id="fsearch" placeholder="Rechercher un pseudo" aria-label="Rechercher un pseudo" style="border:1.5px solid var(--line);border-radius:14px;padding:12px;font-size:16px">
+  <button class="btn ghost" data-a="invite">Copier mon lien d'invitation</button><p class="note" id="invmsg">maisonfit.app/@clea</p>
+  <p class="note">Suggestions, des amis de tes contacts</p>${sugg.map(k=>`<div class="frow">${avatar(k)}<span><b>${esc(PEOPLE[k].n)}</b><small>${esc(PEOPLE[k].city)} · ${esc(PEOPLE[k].st)}</small></span><button data-addf="${k}" aria-pressed="${(S.added||[]).includes(k)}">${(S.added||[]).includes(k)?'Ajouté':'Ajouter'}</button></div>`).join('')}`);}
+function postSheet(){if(!S.cur)pick();const me=S.cur.map(get);const pf=S.pf||{story:1,post:1};
+  sheet(`<h2>Publier mon look</h2>${canvasOf(me)}<input id="pcap" maxlength="80" placeholder="Une légende ? (facultatif)" aria-label="Légende" style="border:1.5px solid var(--line);border-radius:14px;padding:12px;font-size:16px">
+  <p class="note">Où le publier ?</p><div class="pf"><button data-pf="story" aria-pressed="${!!pf.story}">Story 🔥<small>24 h, garde tes flammes</small></button><button data-pf="post" aria-pressed="${!!pf.post}">Post<small>Reste sur ton profil</small></button></div>
+  <p class="note">Qui peut le voir ?</p><div class="seg"><button data-vis="friends" aria-pressed="${S.vis!=='all'}">Mes amis</button><button data-vis="all" aria-pressed="${S.vis==='all'}">Tout le monde</button></div>
+  <p class="note" id="visnote">${S.vis==='all'?'Visible par tous dans « Pour toi ». Tes abonnés le voient en premier.':'Seulement tes amis. Personne d\'autre ne le voit.'}</p>
+  <button class="btn" data-a="dopost">Publier</button><p class="note">Seuls tes vêtements apparaissent, jamais ton visage, sauf si tu ajoutes une photo toi-même.</p>`);}
+const SKINS=['#f6d7c3','#eec1a0','#d9a27a','#b97a52','#8d5a3b','#5e3b26'];
+const HCOLS={noir:'#1f1a17',brun:'#4a3020',chatain:'#7a5432',blond:'#d9b26f',roux:'#b5582b',gris:'#a9a6a2',rose:'#e7a6b8',bleu:'#5b7fb8'};
+const HAIRS={court:'Court',long:'Long',boucles:'Bouclés',chignon:'Chignon',tresses:'Tresses',rase:'Rasé',afro:'Afro'};
+const ACCS={aucun:'Rien',lunettes:'Lunettes',soleil:'Lunettes de soleil',boucles:"Boucles d'oreilles",casquette:'Casquette',bonnet:'Bonnet',barbe:'Barbe'};
+function avatarSVG(a){a=a||{};const sk=SKINS[a.skin||1];const hc=HCOLS[a.hcol||'brun'];const hs=a.hair||'court';const ac=a.acc||'aucun';
+  const its=(S.cur||[]).map(get).filter(Boolean);const top=its.find(i=>i.cat==='top');const ou=its.find(i=>i.cat==='outer');const tc=top?COLORS[top.col]:'#1c1c1c';const oc=ou?COLORS[ou.col]:null;
+  let back='',front='';
+  if(hs==='long')back=`<path d="M25 48 Q24 18 50 18 Q76 18 75 48 L77 84 L63 84 L63 54 L37 54 L37 84 L23 84Z" fill="${hc}"/>`;
+  if(hs==='tresses')back=`<path d="M30 50 Q28 70 33 86" stroke="${hc}" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="6 3"/><path d="M70 50 Q72 70 67 86" stroke="${hc}" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="6 3"/>`;
+  if(hs==='afro')back=`<circle cx="50" cy="38" r="27" fill="${hc}"/>`;
+  if(hs==='boucles')back=[[32,32],[40,24],[50,21],[60,24],[68,32],[71,42],[29,42]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="8" fill="${hc}"/>`).join('');
+  if(hs==='court'||hs==='long'||hs==='tresses'||hs==='chignon')front=`<path d="M30 44 Q29 22 50 22 Q71 22 70 44 Q64 33 50 32 Q36 33 30 44Z" fill="${hc}"/>`;
+  if(hs==='chignon')front+=`<circle cx="50" cy="17" r="8" fill="${hc}"/>`;
+  if(hs==='rase')front=`<path d="M31 40 Q31 24 50 24 Q69 24 69 40 Q60 32 50 32 Q40 32 31 40Z" fill="${hc}" opacity=".55"/>`;
+  let acc='';
+  if(ac==='lunettes')acc=`<g fill="none" stroke="#0e0e0e" stroke-width="1.6"><circle cx="42" cy="46" r="5.5"/><circle cx="58" cy="46" r="5.5"/><path d="M47.5 46h5"/></g>`;
+  if(ac==='soleil')acc=`<g fill="#0e0e0e"><rect x="35" y="42" width="13" height="8" rx="3"/><rect x="52" y="42" width="13" height="8" rx="3"/><rect x="47" y="44" width="6" height="1.6"/></g>`;
+  if(ac==='boucles')acc=`<circle cx="31.5" cy="55" r="2.4" fill="#d9b26f"/><circle cx="68.5" cy="55" r="2.4" fill="#d9b26f"/>`;
+  if(ac==='casquette')acc=`<path d="M29 40 Q29 21 50 21 Q71 21 71 40Z" fill="#0e0e0e"/><path d="M50 38 Q66 37 80 41 Q66 43 50 41Z" fill="#0e0e0e"/>`;
+  if(ac==='bonnet')acc=`<path d="M28 42 Q28 16 50 16 Q72 16 72 42Z" fill="#a8473a"/><rect x="27" y="37" width="46" height="7" rx="3" fill="#8e3a2f"/>`;
+  if(ac==='barbe')acc=`<path d="M34 52 Q36 70 50 71 Q64 70 66 52 Q60 62 50 62 Q40 62 34 52Z" fill="${hc}"/>`;
+  return `<svg viewBox="0 0 100 100" aria-hidden="true" style="width:100%;height:100%"><circle cx="50" cy="50" r="50" fill="var(--blush)"/>${back}
+  <path d="M16 104 Q17 76 50 74 Q83 76 84 104Z" fill="${tc}"/>${oc?`<path d="M16 104 Q17 76 40 74 L46 104Z" fill="${oc}"/><path d="M84 104 Q83 76 60 74 L54 104Z" fill="${oc}"/>`:''}
+  <rect x="44" y="60" width="12" height="16" rx="5" fill="${sk}"/><ellipse cx="31" cy="49" rx="3.5" ry="5" fill="${sk}"/><ellipse cx="69" cy="49" rx="3.5" ry="5" fill="${sk}"/>
+  <ellipse cx="50" cy="46" rx="19" ry="22" fill="${sk}"/>${front}
+  <circle cx="42.5" cy="46" r="2" fill="#2a211c"/><circle cx="57.5" cy="46" r="2" fill="#2a211c"/><path d="M44 56 Q50 61 56 56" stroke="#2a211c" stroke-width="1.8" fill="none" stroke-linecap="round"/><ellipse cx="38" cy="53" rx="3" ry="1.8" fill="#e58f7a" opacity=".35"/><ellipse cx="62" cy="53" rx="3" ry="1.8" fill="#e58f7a" opacity=".35"/>${acc}</svg>`;}
+const meAv=(s=44)=>S.avatar?`<span class="av" style="width:${s}px;height:${s}px;border:0;padding:0;overflow:hidden;background:none">${avatarSVG(S.avatar)}</span>`:`<span class="av" style="width:${s}px;height:${s}px;border:0;font-size:${Math.round(s*.4)}px;background:var(--ink);color:var(--paper)">${esc(((S.prof&&S.prof.name)||'Cléa')[0].toUpperCase())}</span>`;
+function avatarSheet(){const a=S.avatar||(S.avatar={skin:1,hair:S.gender==='h'?'court':'long',hcol:'brun',acc:'aucun'});
+  sheet(`<h2>Ton avatar</h2><p class="sub">Il porte ton look du jour, automatiquement.</p><div style="display:flex;justify-content:center"><span style="width:150px;height:150px;border-radius:50%;overflow:hidden;display:block">${avatarSVG(a)}</span></div>
+  <p class="note">Peau</p><div class="sw">${SKINS.map((c,i)=>`<button type="button" data-av="skin:${i}" aria-label="Teinte ${i+1}" aria-pressed="${a.skin===i}" style="background:${c}"></button>`).join('')}</div>
+  <p class="note">Cheveux</p><div class="filt" style="flex-wrap:wrap">${Object.entries(HAIRS).map(([k,n])=>`<button data-av="hair:${k}" aria-pressed="${a.hair===k}">${n}</button>`).join('')}</div>
+  <p class="note">Couleur des cheveux</p><div class="sw">${Object.entries(HCOLS).map(([k,c])=>`<button type="button" data-av="hcol:${k}" aria-label="${k}" aria-pressed="${a.hcol===k}" style="background:${c}"></button>`).join('')}</div>
+  <p class="note">Accessoire</p><div class="filt" style="flex-wrap:wrap">${Object.entries(ACCS).map(([k,n])=>`<button data-av="acc:${k}" aria-pressed="${a.acc===k}">${n}</button>`).join('')}</div>
+  <button class="btn" data-close>C'est moi !</button>`);}
+function seedHL(){if(S.hl)return;const mk=(o,n)=>{const l=combos(o,null,false).slice(0,3).map(c=>c.ids);return {n,looks:l};};S.hl=[mk('cours','Cours'),mk('soiree','Soirées'),mk('voyage','Voyage'),mk('date','Dates')].filter(x=>x.looks.length);}
+function account(){seedHL();const P=S.prof||{name:'Cléa',handle:'clea',bio:'Étudiante à Toulouse. Un look par jour, zéro prise de tête.'};const mine=S.myposts||[];const tab=S.acctab||'looks';
+  const grid=tab==='looks'?mine.map(p=>canvasOf(p.items)).join('')||'<p class="note" style="grid-column:1/-1">Publie ton premier look pour remplir ton profil.</p>'
+    :tab==='favs'?(S.favs||[]).map(f=>canvasOf(f.map(get).filter(Boolean))).join('')||'<p class="note" style="grid-column:1/-1">Aucun favori pour le moment.</p>'
+    :'';
+  return `<div class="brandbar"><span class="logo" style="letter-spacing:.05em;font-size:20px">@${esc(P.handle)}</span><button class="swapb" data-a="settings" style="border:1.5px solid var(--ink);border-radius:999px;padding:6px 14px;background:var(--paper);color:var(--ink);font-weight:700">Réglages</button></div>
+  <div class="acc-top"><button class="namebtn" data-a="avatar" aria-label="Modifier mon avatar" style="position:relative">${meAv(84)}<span style="position:absolute;right:-2px;bottom:-2px;background:var(--ink);color:var(--paper);border:2px solid var(--paper);border-radius:999px;font-size:11px;font-weight:800;padding:2px 8px">${S.avatar?'Modifier':'Créer'}</span></button><div class="counts" style="border:0;padding:0"><span><b>${mine.length+42}</b><small>looks</small></span><span><b>${kf(S.followers||128)}</b><small>abonnés</small></span><span><b>${(S.follow||[]).length+Object.keys(FST0).length}</b><small>abonnements</small></span></div></div>
+  <div><b style="font-size:16px">${esc(P.name)}</b><p class="cap2" style="margin-top:2px">${esc(P.bio)}</p><div class="tags" style="margin-top:6px">${(S.styles||[]).map(s=>`<span>${{chic:'Chic',street:'Streetwear',casual:'Casual',sport:'Sporty',mini:'Minimaliste',color:'Coloré'}[s]}</span>`).join('')}<span>🔥 ${S.streak} jours</span>${S.plus?'<span>MaisonFit+</span>':''}</div></div>
+  <div class="row"><button class="btn ghost" data-a="editprof">Modifier le profil</button><button class="btn ghost" data-a="shareprof">Partager le profil</button></div>
+  <p class="note" id="sharemsg" style="text-align:center"></p>
+  <div><p class="note" style="margin-bottom:8px">Stories à la une</p><div class="stories">${S.hl.map((x,i)=>`<button class="story" data-hl="${i}"><span class="ring seen" style="background:#d9d4ce"><span class="av hlc">${x.looks[0]?svg(get(x.looks[0][i%x.looks[0].length])||{shape:'tee',col:'blanc'}):''}</span></span>${esc(x.n)}</button>`).join('')}<button class="story" data-a="newhl"><span class="ring add">+</span>Nouveau</button></div></div>
+  <div class="seg seg3"><button data-acctab="looks" aria-pressed="${tab==='looks'}">Mes looks</button><button data-acctab="favs" aria-pressed="${tab==='favs'}">Favoris</button><button data-acctab="stats" aria-pressed="${tab==='stats'}">Stats</button></div>
+  ${tab==='stats'?statsHTML():`<div class="pgrid">${grid}</div>`}`;}
+function statsHTML(){const st=S.items.slice().sort((a,b)=>a.worn-b.worn)[0];const top=S.items.slice().sort((a,b)=>b.worn-a.worn)[0];
+  return `<div class="${S.plus?'':'blur'}"><div class="stat"><span>Ta pièce la plus portée<br><b style="font:700 15px Manrope">${esc(top.name)}</b></span><b>${top.worn}×</b></div><div class="stat"><span>Celle que tu oublies<br><b style="font:700 15px Manrope">${esc(st.name)}</b></span><b>${st.worn}×</b></div><div class="stat"><span>Série de looks portés</span><b>${S.streak}</b></div></div>${S.plus?'':`<button class="btn" data-a="pay" data-r="Tes stats avec MaisonFit+">Voir mes stats</button>`}`;}
+function hlView(i,k){const x=S.hl[i];if(!x||!x.looks[k]){ov.innerHTML='';render();return;}const its=x.looks[k].map(get).filter(Boolean);
+  ov.innerHTML=`<div class="sv" role="dialog" aria-modal="true" aria-label="Story à la une ${esc(x.n)}"><div class="bars">${x.looks.map((_,j)=>`<i class="${j<=k?'on':''}"></i>`).join('')}</div>
+  <div class="sh">${meAv(34)}<span><b>${esc(x.n)}</b><small>À la une · ${k+1}/${x.looks.length}</small></span><button class="x" data-closesv aria-label="Fermer">✕</button></div>
+  <div class="stage"><button class="tapl" data-hlgo="${i}:${k-1}" aria-label="Précédent"></button><button class="tapr" data-hlgo="${i}:${k+1}" aria-label="Suivant"></button>${canvasOf(its,'night')}<p class="scap">${esc(its.map(t=>t.name).join(' · '))}</p></div>
+  <button class="btn ghost" style="background:transparent;color:#fff;border-color:#555" data-hladd="${i}">Ajouter mon look du jour ici</button></div>`;}
+function editProfSheet(){const P=S.prof||{name:'Cléa',handle:'clea',bio:'Étudiante à Toulouse. Un look par jour, zéro prise de tête.'};
+  sheet(`<h2>Modifier le profil</h2><form class="addf" id="profform"><input id="pfname" maxlength="30" value="${esc(P.name)}" aria-label="Nom"><input id="pfhandle" maxlength="24" value="${esc(P.handle)}" aria-label="Pseudo"><input id="pfbio" maxlength="120" value="${esc(P.bio)}" aria-label="Bio"><button class="btn" type="submit">Enregistrer</button></form>`);}
+function profileSheet(u){
+  if(u==='me'){const mine=S.myposts||[];sheet(`<div class="prof">${avatar('me').replace('class="av"','class="av" style="background:var(--ink);color:var(--paper)"')}<h2>Cléa</h2><p class="sub">@clea · Toulouse · ${PSTYLE[S.pstyle||'chic'].n}</p>
+    <div class="counts"><span><b>${mine.length+42}</b><small>looks</small></span><span><b>${kf(S.followers||128)}</b><small>abonnés</small></span><span><b>${(S.follow||[]).length+Object.keys(FST0).length}</b><small>abonnements</small></span></div>
+    ${S.newF?`<div class="done" style="width:100%">${S.newF} personnes ont commencé à te suivre depuis ton dernier look public.</div>`:''}
+    <div class="toggle"><span><b>Compte public</b><br><small class="note">${S.pub!==false?'Tout le monde peut te suivre et voir tes looks publics.':'Seuls tes amis voient tes looks.'}</small></span><button data-a="pubtog" aria-pressed="${S.pub!==false}" aria-label="Compte public"></button></div>
+    <div class="pgrid">${mine.map(p=>canvasOf(p.items)).join('')}${!mine.length?'<p class="note" style="grid-column:1/-1">Publie ton premier look pour remplir ton profil.</p>':''}</div></div>`);return;}
+  const P=PEOPLE[u];const posts=POSTS.filter(p=>p.u===u);
+  sheet(`<div class="prof">${avatar(u)}<h2>${esc(P.n)}</h2><p class="sub">${esc(P.city)} · ${esc(P.st)}</p>${P.bio?`<p class="cap2">${esc(P.bio)}</p>`:''}
+  <div class="counts"><span><b>${P.looks||posts.length+30}</b><small>looks</small></span><span><b>${P.f?kf(P.f+(following(u)?1:0)):'Ami'}</b><small>${P.f?'abonnés':'depuis 2025'}</small></span><span><b>${P.f?Math.round(P.f/90):fst(u)||0}</b><small>${P.f?'abonnements':'flammes'}</small></span></div>
+  ${P.f?`<button class="btn ${following(u)?'ghost':''}" data-follow="${u}" style="width:100%">${following(u)?'Abonné':'Suivre'}</button>`:''}
+  <div class="pgrid">${posts.map(p=>canvasOf(p.items)).join('')}${posts.map(p=>canvasOf(p.items.map(i=>({...i,col:i.col==='noir'?'marine':i.col==='beige'?'blanc':i.col}))).replace('canvas','canvas')).join('')}</div></div>`);}
+function wardrobe(){
+  const list=S.items.filter(i=>S.filter==='all'||i.cat===S.filter);
+  return `<h1>Ma <em>garde-robe</em></h1><div class="row"><button class="btn soft" data-tab="favs">♡ Favoris et stats</button><button class="btn ghost" data-tab="shop">Check shopping</button></div><p class="sub">${S.items.length} vêtements${S.plus?'':' sur 30 en gratuit'}. Touche un vêtement pour voir ce qui va avec.</p>
+  <div class="filt">${[['all','Tout'],...Object.entries(CATS)].map(([k,n])=>`<button data-f="${k}" aria-pressed="${S.filter===k}">${n}</button>`).join('')}</div>
+  <div class="grid"><button class="add" data-a="add"><span>+</span>Ajouter</button>${list.map(i=>piece(i)).join('')}</div>`;
+}
+const GROUPS0=[{id:'g1',n:'Les copines',m:['lea','ines','sofia']},{id:'g2',n:'Coloc Saint-Cyprien',m:['hugo','camille']},{id:'d1',n:'Léa',m:['lea'],dm:1}];
+const allGroups=()=>[...(S.groupsX||[]),...GROUPS0];
+const grp=id=>allGroups().find(x=>x.id===id);
+const H=(cat,shape,col,name,price,store)=>({cat,shape,col,name,price,store});
+const CHATS0={g1:[
+ {u:'ines',t:'Craquage du jour 😭',haul:H('shoes','sneak','jaune','Baskets jaunes','89 €','Rue Alsace-Lorraine')},
+ {u:'lea',t:'Elles sont trop belles, tu les mets avec quoi ?'},
+ {u:'ines',t:'Jean bleu et pull gris, comme le look de tom_paris'},
+ {u:'sofia',t:'Et moi j\'ai craqué sur ça',haul:H('top','pull','rose','Pull rose','35 €','En ligne')},
+ {u:'lea',t:'Tu me le prêtes samedi ? 👀'}],
+ d1:[{u:'lea',t:'Mon look pour ce soir, validé ?',look:[T('top','cami','noir'),T('bottom','skirt','noir'),T('shoes','boot','noir'),T('outer','coat','beige')]},{u:'me',t:'Validé à 100 % 🔥'},{u:'lea',t:'Tu me prêtes ton trench samedi ?'}],
+ g2:[{u:'hugo',t:'Trouvée en friperie',haul:H('outer','jacket','bordeaux','Veste cuir bordeaux','45 €','Friperie Saint-Cyprien')},{u:'camille',t:'La friperie, meilleur plan de l\'année'}]};
+const REPLIES=['Trop beau 😍','Tu l\'as eu où ?','Tu me le prêtes ? 👀','Ok je veux le même','Validé par le groupe ✅','Ça va trop bien avec ton jean noir'];
+const chatOf=g=>(S.chats=S.chats||{},S.chats[g]||(S.chats[g]=(CHATS0[g]||[]).map(m=>({...m}))));
+function groupsList(){return `<div class="glist">${allGroups().map(g=>{const c=chatOf(g.id);const last=c[c.length-1];const lh=[...c].reverse().find(m=>m.haul);return `<button class="gitem" data-group="${g.id}"><span class="gav">${g.dm?avatar(g.m[0]):lh?svg(lh.haul):''}</span><span><b>${esc(g.n)}</b><small>${last?(last.u==='me'?'Toi':esc(PEOPLE[last.u]?.n||'MaisonFit'))+' · '+esc(last.t||(last.haul?'a montré un achat':last.img?'a envoyé une photo':last.look?'a partagé un look':'')):'Nouveau groupe'}</small></span><span class="nb">${g.dm?'Privé':c.filter(m=>m.haul||m.img||m.look).length+' photos'}</span></button>`;}).join('')}</div>
+  <button class="btn ghost" data-a="newgroup">Créer un groupe</button><p class="note">Les conversations, achats et prix sont des exemples pour le prototype. Tu peux envoyer de vraies photos.</p>`;}
+function chatView(gid){const g=grp(gid);const c=chatOf(gid);
+  return `<div class="chathead"><button data-group="" aria-label="Retour">‹</button><span><b>${esc(g.n)}</b><small>${g.dm?'Conversation privée':g.m.map(k=>PEOPLE[k].n).join(', ')+' et toi'}</small></span></div>
+  <div class="chat" id="chat">${c.map((m,i)=>m.sys?`<div class="sysm">${esc(m.t)}</div>`:`<div class="msg ${m.u==='me'?'me':''}">${avatar(m.u)}<div class="bub"><span class="nm">${esc(PEOPLE[m.u]?.n||'')}</span>${m.img?`<img src="${esc(m.img)}" alt="Photo envoyée">`:''}${m.look?canvasOf(m.look):''}${m.haul?`<div class="haul"><div class="hp">${svg(m.haul)}</div><div class="hb"><span class="pr">${esc(m.haul.price)}</span><b>${esc(m.haul.name)}</b><small>${esc(m.haul.store)}</small></div></div>`:''}${m.t?`<span>${esc(m.t)}</span>`:''}${m.haul&&m.u!=='me'?`<div class="qr"><button data-match="${gid}:${i}">Ça irait avec mes vêtements ?</button>${['Tu me le prêtes ? 👀','Trop beau 😍'].map(q=>`<button data-quick="${gid}" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>`:''}</div></div>`).join('')}
+  ${S.typing===gid?`<span class="typing">Quelqu'un est en train d'écrire…</span>`:''}</div>
+  <form class="comp" id="compf"><button type="button" class="plus2" data-a="attach" aria-label="Envoyer une photo, un achat ou un look">+</button><input id="cmsg" placeholder="Message" aria-label="Message" autocomplete="off"><button type="submit" aria-label="Envoyer">↑</button></form>`;}
+function sendMsg(gid,m){const c=chatOf(gid);c.push(m);S.typing=gid;render();scrollChat();
+  const g=grp(gid);setTimeout(()=>{if(!g.m.length){S.typing=null;return;}const u=g.m[Math.floor(Math.random()*g.m.length)];const t=(m.haul||m.img||m.look)?REPLIES[Math.floor(Math.random()*REPLIES.length)]:['Grave 😂','Mdr oui','Je suis d\'accord','Montre !'][Math.floor(Math.random()*4)];c.push({u,t});S.typing=null;if(S.tab==='chat'&&S.group===gid){render();scrollChat();}},1400);}
+function scrollChat(){const s=document.getElementById('screen');if(s&&s.scrollTo)s.scrollTo({top:s.scrollHeight});}
+function buySheet(){sheet(`<h2>Montrer un achat</h2><p class="note">Dans l'appli, tu prendrais ton achat en photo. Ici, choisis un exemple.</p>
+  <div class="cand">${CANDS.map((x,i)=>`<button class="piece" data-buy="${i}"><span class="ph">${svg(x)}</span><small>${esc(x.name)}</small></button>`).join('')}</div>
+  <input id="bprice" inputmode="decimal" placeholder="Prix (facultatif)" aria-label="Prix" style="border:1.5px solid var(--line);border-radius:14px;padding:12px;font-size:16px">
+  <input id="bstore" placeholder="Magasin (facultatif)" aria-label="Magasin" style="border:1.5px solid var(--line);border-radius:14px;padding:12px;font-size:16px">`);}
+function chat(){if(S.group&&grp(S.group))return chatView(S.group);return `<h1>Mes <em>conversations</em></h1><p class="sub">Tes groupes d'amis. Envoie des photos, tes nouveaux achats et tes looks.</p>${groupsList()}`;}
+function shop(){return shopCheck(`<button class="btn ghost" data-tab="wardrobe">‹ Retour à ma garde-robe</button>`);}
+function attachSheet(){sheet(`<h2>Envoyer</h2><div class="attach">
+<label for="photoin"><svg viewBox="0 0 30 30" aria-hidden="true"><rect x="3" y="7" width="24" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="15" cy="16" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 7l2-3h6l2 3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Photo<input type="file" id="photoin" accept="image/*"></label>
+<button data-a="showbuy"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M7 10h16l-1.5 16h-13z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M11 10a4 4 0 0 1 8 0" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Un achat</button>
+<button data-a="sendlook"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M10 5l5 3 5-3 6 4-3 5-3-1v13H10V13l-3 1-3-5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Mon look</button></div>`);}
+function newGroupSheet(){const sel=S.gsel||[];sheet(`<h2>Créer un groupe</h2><input id="gname" maxlength="30" placeholder="Nom du groupe" aria-label="Nom du groupe" value="${esc(S.gname||'')}" style="border:1.5px solid var(--line);border-radius:14px;padding:12px;font-size:16px">
+<p class="note">Ajoute des amis</p><div class="gsel">${Object.keys(PEOPLE).filter(k=>PEOPLE[k].fr||(S.added||[]).includes(k)).map(k=>`<button data-gsel="${k}" aria-pressed="${sel.includes(k)}">${avatar(k)}${esc(PEOPLE[k].n)}</button>`).join('')}</div>
+<button class="btn" data-a="mkgroup">Créer le groupe</button>`);}
+function shopCheck(seg){
+  const c=CANDS[S.cand];const res=checkItem(c);const locked=!S.plus&&S.checks>=1;
+  return `<h1>Check <em>shopping</em></h1>${seg}<p class="sub">En magasin, prends le vêtement en photo. MaisonFit te dit s'il vaut le coup.</p>
+  <p class="note">Exemples de vêtements pris en photo en magasin</p>
+  <div class="cand">${CANDS.map((x,i)=>`<button class="piece" data-cand="${i}" aria-pressed="${S.cand===i}"><span class="ph">${svg(x)}</span><small>${esc(x.name)}</small></button>`).join('')}</div>
+  <div class="${locked?'blur':''}">
+  <div class="stat"><span><b style="font-size:16px">${esc(c.name)}</b><br><span class="sub">va avec tes vêtements dans</span></span><span class="big">${res.n}</span></div>
+  <p class="sub" style="margin-top:6px">tenues possibles${res.n<4?', c\'est peu pour un achat':', un bon achat'}.</p>
+  ${res.dup?`<div class="warn">Attention, tu as déjà « ${esc(res.dup.name)} », presque pareil. Tu l'as porté ${res.dup.worn} fois ce mois-ci.</div>`:''}
+  <h2 style="margin-top:12px">Ça irait avec</h2><div class="mini">${res.with.slice(0,8).map(i=>piece(i)).join('')}</div>
+  </div>
+  ${locked?`<button class="btn acc" data-a="pay" data-r="Le check shopping est illimité avec MaisonFit+">Débloquer le check shopping</button>`:''}`;
+}
+function checkItem(c){
+  const it={...c,id:-1,w:c.w||1,rain:0,worn:0};
+  S.items.push(it);const seen=new Set();const withSet=new Set();
+  for(const o of Object.keys(OCC)){for(const x of combos(o,null,c.cat==='outer'))if(x.ids.includes(-1)){seen.add(x.ids.join('-'));x.ids.forEach(id=>id!==-1&&withSet.add(id));}}const n=seen.size;
+  S.items.pop();
+  const dup=S.items.find(i=>i.cat===c.cat&&i.col===c.col&&i.shape===c.shape);
+  return {n,dup,with:[...withSet].map(get)};
+}
+function favs(){
+  const st=S.items.slice().sort((a,b)=>a.worn-b.worn)[0];
+  return `<h1>Favoris <em>et stats</em></h1>
+  ${S.favs.length?`<div class="olist">${S.favs.map((f,k)=>`<div class="outfit">${f.map(id=>get(id)?svg(get(id)):'').join('')}<button class="heart" data-unfav="${k}" aria-label="Retirer">♥</button></div>`).join('')}</div>`:`<p class="sub">Aucune tenue en favori. Garde celles que tu aimes depuis « Aujourd'hui » ou une fiche vêtement.</p>`}
+  <h2>Tes stats</h2>
+  <div class="${S.plus?'':'blur'}"><div class="stat"><span>Le vêtement que tu portes le moins<br><b style="font:700 15px Manrope">${esc(st.name)}</b></span><b>${st.worn}×</b></div>
+  <div class="stat" style="margin-top:8px"><span>Tenues différentes possibles avec ta garde-robe</span><b>${Object.keys(OCC).reduce((n,o)=>n+combos(o,null,false).length,0)}</b></div></div>
+  ${S.plus?'':`<button class="btn acc" data-a="pay" data-r="Tes stats de garde-robe avec MaisonFit+">Voir mes stats</button>`}`;
+}
+const TABI={chat:'<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17A2.5 2.5 0 0 1 4 14.5z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',social:'<circle cx="9" cy="9" r="3.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="16.5" cy="10" r="2.8" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M15 14.2c3 0 5.5 1.8 5.5 4.8" fill="none" stroke="currentColor" stroke-width="1.5"/>',week:'<rect x="3.5" y="5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.5"/>',today:'<path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="12" r="4.5" fill="currentColor"/>',wardrobe:'<path d="M12 6a2 2 0 1 1 2 2c-1 0-2 .7-2 1.6L3 16h18l-9-6.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',shop:'<path d="M5 8h14l-1 13H6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 8a3 3 0 0 1 6 0" fill="none" stroke="currentColor" stroke-width="1.5"/>',favs:'<path d="M12 20s-8-5-8-11a4.5 4.5 0 0 1 8-2.6A4.5 4.5 0 0 1 20 9c0 6-8 11-8 11z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>'};
+const TABN={today:"Aujourd'hui",week:'Semaine',social:'Social',chat:'Messages',wardrobe:'Garde-robe',account:'Compte'};
+function render(){
+  document.getElementById('screen').innerHTML=tx({today,week,social,chat,wardrobe,shop,favs,account,trip}[S.tab]());document.querySelector('.status span').textContent=HRS[S.hi||0];
+  document.getElementById('tabs').innerHTML=tx(Object.keys(TABN).map(k=>`<button data-tab="${k}" aria-label="${TABN[k]}" aria-current="${S.tab===k||(k==='week'&&S.tab==='trip')||(k==='wardrobe'&&(S.tab==='favs'||S.tab==='shop'))}">${k==='account'?`<span class="tabav">${meAv(24)}</span>`:`<svg viewBox="0 0 24 24" aria-hidden="true">${TABI[k]}</svg>`}</button>`).join(''));
+  document.getElementById('plusTag').innerHTML=S.plus?'<span class="plus">MaisonFit+</span>':'';
+}
+const ov=document.getElementById('ov');
+const TUTO={"fr": ["Aujourd'hui", "Ton look du jour, choisi selon la météo et ton programme.", "Semaine", "Prépare tes looks à l'avance. On te prévient si la météo change.", "Social", "Les looks de tes amis, leurs stories et tes flammes.", "Messages", "Tes conversations et tes groupes entre amis.", "Garde-robe", "Toutes tes pièces, tes favoris et tes nouveaux achats.", "Compte", "Ton profil, ton avatar et tes stories à la une."], "en": ["Today", "Your look of the day, picked for the weather and your plans.", "Week", "Plan your looks ahead. We'll tell you if the weather changes.", "Social", "Your friends' looks, their stories and your streaks.", "Chats", "Your conversations and group chats.", "Wardrobe", "All your pieces, favourites and new buys.", "Profile", "Your profile, your avatar and your highlights."], "es": ["Hoy", "Tu look del día, según el tiempo y tus planes.", "Semana", "Prepara tus looks con antelación. Te avisamos si cambia el tiempo.", "Social", "Los looks de tus amigos, sus historias y tus rachas.", "Mensajes", "Tus conversaciones y grupos de amigos.", "Armario", "Todas tus prendas, favoritos y nuevas compras.", "Perfil", "Tu perfil, tu avatar y tus historias destacadas."], "it": ["Oggi", "Il tuo look del giorno, scelto in base al meteo e ai tuoi piani.", "Settimana", "Prepara i tuoi look in anticipo. Ti avvisiamo se il meteo cambia.", "Social", "I look dei tuoi amici, le loro storie e le tue serie.", "Messaggi", "Le tue chat e i gruppi con gli amici.", "Armadio", "Tutti i tuoi capi, i preferiti e i nuovi acquisti.", "Profilo", "Il tuo profilo, il tuo avatar e le storie in evidenza."], "de": ["Heute", "Dein Look des Tages, passend zu Wetter und Plänen.", "Woche", "Plane deine Looks im Voraus. Wir sagen Bescheid, wenn das Wetter umschlägt.", "Social", "Die Looks deiner Freunde, ihre Stories und deine Streaks.", "Nachrichten", "Deine Chats und Gruppen mit Freunden.", "Kleiderschrank", "Alle deine Teile, Favoriten und Neukäufe.", "Profil", "Dein Profil, dein Avatar und deine Highlights."]};
+function tutoSheet(){const ks=Object.keys(TABN),i=S.tuto,k=ks[i],t=TUTO[S.lang||'fr']||TUTO.fr,last=i===ks.length-1;
+S.tab=k;render();
+sheet(`<div class="tuto"><div class="k">${i+1} / ${ks.length}</div><div class="ic">${k==='account'?meAv(52):`<svg viewBox="0 0 24 24" aria-hidden="true">${TABI[k]}</svg>`}</div><h2>${t[i*2]}</h2><p>${t[i*2+1]}</p></div>
+<div class="dots">${ks.map((_,j)=>`<i class="${j===i?'on':''}"></i>`).join('')}</div>
+<div class="trow">${last?'':'<button class="btn ghost" data-a="tutoskip">Passer</button>'}<button class="btn" data-a="tutonext">${last?"C'est compris":'Suivant'}</button></div>`,true);}
+function sheet(h,noClose){h=tx(h);ov.innerHTML=noClose?`<div class="ov"><div class="sheet" role="dialog" aria-modal="true">${h}</div></div>`:`<div class="ov" data-close><div class="sheet" role="dialog" aria-modal="true">${h}<button class="btn ghost" data-close>Fermer</button></div></div>`;}
+function itemSheet(id){
+  const it=get(id);const others=S.items.filter(x=>x.cat!==it.cat&&ok2(x.col,it.col)&&x.st.some(s=>it.st.includes(s)));
+  const outs=[];for(const o of Object.keys(OCC)){if(!fitsOcc(it,o))continue;for(const c of combos(o,null,it.cat==='outer'))if(c.ids.includes(id)&&!outs.some(x=>x.join()===c.ids.join()))outs.push(c.ids);}
+  sheet(`<div class="hero">${piece(it,'disabled')}<div><h2>${esc(it.name)}</h2><p class="sub">Porté ${it.worn} fois ce mois-ci · ${it.st.map(s=>({casual:'décontracté',chic:'chic',soiree:'soirée',sport:'sport'}[s])).join(', ')}</p></div></div>
+  <button class="btn ${isDirty(id)?'':'ghost'}" data-a="dirty" data-id="${id}">${isDirty(id)?'Il est propre, remettre dans ma garde-robe':'Mettre au linge sale'}</button>${isDirty(id)?'<p class="note">MaisonFit ne te le propose plus jusqu\'à ce qu\'il soit propre.</p>':''}
+  <h2>Ça va avec</h2>${Object.keys(CATS).filter(c=>c!==it.cat).map(c=>{const l=others.filter(x=>x.cat===c);return l.length?`<p class="note">${CATS[c]}</p><div class="mini">${l.map(x=>`<div class="piece"><span class="ph">${svg(x)}</span><small>${esc(x.name)}</small></div>`).join('')}</div>`:''}).join('')}
+  <h2>Tes tenues futures (${outs.length})</h2><div class="olist">${outs.slice(0,4).map(ids=>`<div class="outfit">${ids.map(i=>svg(get(i))).join('')}<button class="heart" data-favids="${ids.join(',')}" aria-label="Garder">♡</button></div>`).join('')}</div>`);
+}
+function pay(r){sheet(`<h2>${esc(r||'Passe à MaisonFit+')}</h2><p class="sub">Vêtements et tenues illimités, check shopping, tenues selon ton agenda, stats.</p>
+<button class="offer" data-a="buy"><b>Mensuel</b><small>Sans engagement</small><span class="pr">2,99 €</span></button>
+<button class="offer best" data-a="buy"><b>Annuel <span class="tag">-44 %</span></b><small>Soit 1,67 € par mois</small><span class="pr">19,99 €</span></button>
+<p class="note">7 jours d'essai gratuit. Prototype, aucun paiement réel.</p>`);}
+function swapSheet(id){const cur=(S.cur||[]).map(get).filter(Boolean);const old=id==='add-outer'?null:get(+id);const cat=old?old.cat:'outer';const rest=cur.filter(i=>i!==old);
+  const alts=by(cat).filter(i=>!old||i.id!==old.id).map(i=>({i,ok:colorsOk([...rest,i]),fit:fitsOcc(i,S.occ)})).sort((a,b)=>(b.ok+b.fit+taste([b.i])*.2)-(a.ok+a.fit+taste([a.i])*.2));
+  sheet(`<h2>${old?'Changer '+esc(old.name.toLowerCase()):'Ajouter une veste'}</h2><p class="sub">${old?'Le reste du look ne bouge pas. Choisis une autre pièce.':'Choisis la veste à ajouter à ton look.'}</p>
+  <div class="grid">${alts.map(({i,ok})=>`<button class="piece" data-doswap="${old?old.id:'add'}:${i.id}"><span class="ph">${svg(i)}</span><b>${esc(i.name)}</b><small>${ok?'Va avec ton look':'Plus audacieux'}</small></button>`).join('')}</div>
+  ${old&&cat==='outer'?`<button class="btn ghost" data-doswap="${old.id}:none">Retirer la veste</button>`:''}`);}
+function themeSheet(){sheet(`<h2>Créer un thème</h2><p class="sub">Donne un nom à ton thème et choisis le style de vêtements qu'MaisonFit doit te proposer.</p>
+<form class="addf" id="thf"><input id="thn" required maxlength="24" placeholder="Ex. Brunch, Stage, Festival, Mariage" aria-label="Nom du thème">
+<div class="filt" style="flex-wrap:wrap">${Object.keys(STN).map((k,i)=>`<button type="button" data-st="${k}" aria-pressed="${i===0}">${STN[k]}</button>`).join('')}</div>
+<button class="btn" type="submit">Créer le thème</button></form><p class="note">1 thème perso gratuit, illimité avec MaisonFit+.</p>`);}
+function addTheme(t){OCC[t.k]=t.st;OCCN[t.k]=t.n;}
+function addSheet(){sheet(`<h2>Ajouter un vêtement</h2><p class="note">Dans l'appli, tu prendrais une photo et MaisonFit détourerait et classerait tout seul. Ici on simule.</p>
+<form class="addf" id="addf"><input id="an" required placeholder="Nom (ex. Pull rouge)" aria-label="Nom"><select id="as" aria-label="Type"><option value="tee|top">T-shirt</option><option value="pull|top">Pull</option><option value="shirt|top">Chemise</option><option value="jean|bottom">Jean</option><option value="pant|bottom">Pantalon</option><option value="skirt|bottom">Jupe</option><option value="sneak|shoes">Baskets</option><option value="boot|shoes">Bottines</option><option value="jacket|outer">Veste</option><option value="coat|outer">Manteau</option></select>
+<div class="sw" id="asw">${Object.keys(COLORS).map((k,i)=>`<button type="button" data-col="${k}" aria-label="${k}" aria-pressed="${i===0}" style="background:${COLORS[k]}"></button>`).join('')}</div>
+<select id="ast" aria-label="Style"><option value="casual">Décontracté</option><option value="chic">Chic</option><option value="soiree">Soirée</option><option value="sport">Sport</option></select>
+<button class="btn" type="submit">Ajouter</button></form>`);}
+let addCol='blanc';
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-appmode],[data-tocc],[data-pk],[data-tab],[data-a],[data-av],[data-acctab],[data-hl],[data-hlgo],[data-hladd],[data-pwhen],[data-pocc],[data-swap],[data-doswap],[data-lang],[data-fav],[data-sty],[data-avoid],[data-ban],[data-why],[data-gender],[data-accent],[data-cm],[data-cq],[data-askref],[data-gsel],[data-prof],[data-follow],[data-pf],[data-story],[data-closesv],[data-svr],[data-shopv],[data-group],[data-match],[data-quick],[data-buy],[data-feed],[data-cmp],[data-rx],[data-recreate],[data-addf],[data-vis],[data-vote],[data-report],[data-hi],[data-voice],[data-pstyle],[data-nfreq],[data-nh],[data-wt],[data-pickday],[data-choose],[data-item],[data-f],[data-occ],[data-st],[data-cand],[data-close],[data-favids],[data-unfav],[data-col]');if(!g)return;
+  const d=g.dataset;
+  if(d.close!=null){if(e.target===g||g.tagName==='BUTTON')ov.innerHTML='';return;}
+  if(d.appmode){S.mode=d.appmode;applyMode();document.querySelectorAll('[data-appmode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.appmode===S.mode));return;}
+  if(d.tocc){S.trip.occ=d.tocc;S.trip.plan=null;render();return;}
+  if(d.pk){const P=S.trip.packed;S.trip.packed=P.includes(d.pk)?P.filter(x=>x!==d.pk):[...P,d.pk];render();return;}
+  if(d.tab){if(d.tab==='chat'&&S.tab==='chat')S.group=null;S.tab=d.tab;render();return;}
+  if(d.f){S.filter=d.f;render();return;}
+  if(d.occ){S.occ=d.occ;S.seen=[];S.eve=null;pick();render();return;}
+  if(d.hi!=null){S.hi=+d.hi;render();return;}
+  if(d.av){const [k,v]=d.av.split(':');S.avatar=S.avatar||{};S.avatar[k]=k==='skin'?+v:v;avatarSheet();render();return;}
+  if(d.acctab){S.acctab=d.acctab;render();return;}
+  if(d.hl!=null){hlView(+d.hl,0);return;}
+  if(d.hlgo){const [i,k]=d.hlgo.split(':').map(Number);if(k<0)return;hlView(i,k);return;}
+  if(d.hladd!=null){if(!S.cur)pick();const x=S.hl[+d.hladd];if(!x.looks.some(l=>l.join()===S.cur.join()))x.looks.push([...S.cur]);hlView(+d.hladd,x.looks.length-1);return;}
+  if(d.pwhen||d.pocc){S.plan=S.plan||{when:'soir',occ:'soiree'};if(d.pwhen)S.plan.when=d.pwhen;if(d.pocc)S.plan.occ=d.pocc;planSheet();return;}
+  if(d.swap){swapSheet(d.swap);return;}
+  if(d.doswap){const [o,n]=d.doswap.split(':');let c=[...(S.cur||[])];if(o==='add')c.push(+n);else if(n==='none')c=c.filter(x=>x!==+o);else c=c.map(x=>x===+o?+n:x);S.cur=c;S.worn=false;S.eve=null;S.fb='Pièce changée, le reste de ton look reste pareil.';ov.innerHTML='';render();return;}
+  if(d.lang){S.lang=d.lang;document.documentElement.lang=d.lang;render();obSheet();return;}
+  if(d.sty||d.avoid||d.ban||d.fav){const k=d.sty?'styles':d.avoid?'avoid':d.fav?'fav':'ban';const v=d.sty||d.avoid||d.ban||d.fav;S[k]=S[k]||[];S[k]=S[k].includes(v)?S[k].filter(x=>x!==v):[...S[k],v];S.seen=[];S.cur=null;S.week=null;S.eve=null;obSheet();return;}
+  if(d.why){const its=(S.cur||[]).map(get).filter(Boolean);S.dis=S.dis||{};const bump=(i,n)=>S.dis[i.id]=(S.dis[i.id]||0)+n;
+    if(d.why==='style')its.forEach(i=>bump(i,1));else if(d.why==='colors')its.filter(i=>!NEUTRAL.includes(i.col)).forEach(i=>bump(i,2));else if(d.why==='dressy')its.filter(i=>i.st.includes('chic')&&!i.st.includes('casual')).forEach(i=>bump(i,2));else if(d.why==='cold'){S.tmp=1;}else if(d.why==='item'){const i=get(+d.id);if(i)bump(i,3);}
+    S.fb='Noté. MaisonFit apprend tes goûts et te propose autre chose.';ov.innerHTML='';S.seen=[];pick();render();return;}
+  if(d.gender){if(S.gender!==d.gender){S.gender=d.gender;S.items=wardrobeFor(d.gender);S.dirty=[];S.favs=[];S.cur=null;S.eve=null;S.seen=[];S.week=null;S.chosen={};S.myStory=null;}document.querySelectorAll('[data-gender]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.gender===S.gender));return;}
+  if(d.accent){S.accent=d.accent;applyAccent();document.querySelectorAll('[data-accent]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.accent===S.accent));return;}
+  if(d.feed){S.feed=d.feed;render();return;}
+  if(d.cm){S.cmScroll=d.refs?1:0;commentsSheet(+d.cm);return;}
+  if(d.cq){addComment(+d.cq,d.q);return;}
+  if(d.askref){addComment(+d.askref,'La réf stp 🙏');return;}
+  if(d.prof){profileSheet(d.prof);return;}
+  if(d.follow){S.follow=S.follow||[];const u=d.follow;S.follow=following(u)?S.follow.filter(x=>x!==u):[...S.follow,u];render();if(g.closest('.sheet'))profileSheet(u);return;}
+  if(d.pf){S.pf=S.pf||{story:1,post:1};S.pf[d.pf]=S.pf[d.pf]?0:1;if(!S.pf.story&&!S.pf.post)S.pf[d.pf]=1;g.setAttribute('aria-pressed',!!S.pf[d.pf]);return;}
+  if(d.story!=null){if(!d.story){ov.innerHTML='';render();return;}storyView(d.story);return;}
+  if(d.closesv!=null){ov.innerHTML='';render();return;}
+  if(d.svr){const f=document.getElementById('svf');const i=f&&f.querySelector('input');if(i){i.value='';i.placeholder='Réaction envoyée '+d.svr;}return;}
+  if(d.gsel){S.gname=(document.getElementById('gname')||{}).value||'';S.gsel=S.gsel||[];S.gsel=S.gsel.includes(d.gsel)?S.gsel.filter(x=>x!==d.gsel):[...S.gsel,d.gsel];newGroupSheet();return;}
+  if(d.group!=null){S.group=d.group||null;render();if(S.group)scrollChat();return;}
+  if(d.quick){sendMsg(d.quick,{u:'me',t:d.q});return;}
+  if(d.match){const [gid,i]=d.match.split(':');const m=chatOf(gid)[+i];const r=checkItem({...m.haul,st:['casual','chic']});chatOf(gid).splice(+i+1,0,{sys:1,t:`MaisonFit, rien que pour toi → ${m.haul.name.toLowerCase()} irait avec ${r.with.length} de tes vêtements, soit ${r.n} tenues.${r.dup?' Tu as déjà « '+r.dup.name+' », presque pareil.':''}`});render();return;}
+  if(d.buy!=null){const x=CANDS[+d.buy];const pr=(document.getElementById('bprice')||{}).value;const st=(document.getElementById('bstore')||{}).value;ov.innerHTML='';sendMsg(S.group,{u:'me',t:'Regardez ce que j\'ai acheté',haul:{...x,price:pr?pr.replace(/\s*€?$/,'')+' €':'',store:st||'Nouveau'}});return;}
+  if(d.cmp!=null){if(d.cmp)compareSheet(+d.cmp);return;}
+  if(d.rx!=null){S.rx=S.rx||{};const id=+d.rx,k=+d.k;S.rx[id]=S.rx[id]===k?undefined:k;render();return;}
+  if(d.recreate!=null){if(!S.plus&&(S.recr||0)>=1){pay('Recrée tous les looks de la communauté avec MaisonFit+');return;}S.recr=(S.recr||0)+1;const p=allPosts().find(x=>x.id===+d.recreate);const mine=recreate(p);
+    sheet(`<h2>Ton look, version ${esc(PEOPLE[p.u].n)}</h2><div class="vs"><div>${canvasOf(p.items)}<p class="who">L'original</p></div><b class="v">→</b><div>${canvasOf(mine)}<p class="who">Avec tes vêtements</p></div></div><p class="sub">${mine.map(i=>i.name).join(', ')}.</p><button class="btn" data-favids="${mine.map(i=>i.id).join(',')}">♡ Garder ce look</button>`);return;}
+  if(d.addf){S.added=S.added||[];if(!S.added.includes(d.addf))S.added.push(d.addf);addFriendSheet();render();return;}
+  if(d.vis){S.vis=d.vis;document.querySelectorAll('[data-vis]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.vis===S.vis));const n=document.getElementById('visnote');if(n)n.textContent=S.vis==='all'?'Visible par tous dans « Pour toi ». Tes abonnés le voient en premier.':'Seulement tes amis. Personne d\'autre ne le voit.';return;}
+  if(d.vote){g.parentElement.outerHTML=`<div class="done">${d.vote==='me'?'Vote envoyé. Résultat du duel ce soir à 20h, que le meilleur look gagne.':'Fair-play. Ton ami·e va adorer.'}</div>`;return;}
+  if(d.report!=null){sheet(`<h2>Ce post</h2><button class="btn ghost" data-close>Masquer ce compte</button><button class="btn ghost" data-close>Signaler un contenu inapproprié</button><p class="note">Chaque signalement est vérifié par l'équipe MaisonFit.</p>`);return;}
+  if(d.voice){S.voice=d.voice;render();notifSheet();return;}
+  if(d.pstyle){S.pstyle=d.pstyle;render();notifSheet();return;}
+  if(d.nfreq){S.nfreq=d.nfreq;render();notifSheet();return;}
+  if(d.nh){S.nh=d.nh;render();notifSheet();return;}
+  if(d.pickday!=null){const i=+d.pickday;if(!S.plus&&i>=3){pay('Planifie toute ta semaine avec MaisonFit+');return;}daySheet(i);return;}
+  if(d.choose!=null){const i=+d.choose;S.chosen[i]=d.ids.split(',').map(Number);delete S.kept[i];checkAlerts();planWeek();ov.innerHTML='';render();return;}
+  if(d.wt!=null){const ks=Object.keys(OCC);const i=+d.wt;S.wthemes[i]=ks[(ks.indexOf(S.wthemes[i])+1)%ks.length];delete S.chosen[i];checkAlerts();planWeek();render();return;}
+  if(d.st!=null&&g.closest('#thf')){g.setAttribute('aria-pressed',g.getAttribute('aria-pressed')!=='true');return;}
+  if(d.item){if(g.closest('.sheet'))return;itemSheet(+d.item);return;}
+  if(d.cand){if(!S.plus&&S.checks>=1&&+d.cand!==S.cand){S.cand=+d.cand;render();return;}if(+d.cand!==S.cand)S.checks++;S.cand=+d.cand;render();return;}
+  if(d.col){addCol=d.col;document.querySelectorAll('#asw button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.col===addCol));return;}
+  if(d.favids){if(!S.plus&&S.favs.length>=3){pay('Favoris illimités avec MaisonFit+');return;}S.favs.push(d.favids.split(',').map(Number));g.textContent='♥';g.disabled=true;return;}
+  if(d.unfav){S.favs.splice(+d.unfav,1);render();return;}
+  switch(d.a){
+    case 'wear':if(!S.worn){S.worn=true;(S.cur||[]).forEach(id=>get(id).worn++);}if(!S.wornToday){S.wornToday=true;S.streak++;S.journal.push(1);}render();break;
+    case 'plan':planSheet();break;
+    case 'doplan':ov.innerHTML='';evening();render();setTimeout(()=>document.querySelector('.eve')?.scrollIntoView({behavior:'smooth'}),50);break;
+    case 'evening':S.plan={when:'soir',occ:'soiree'};evening();S.hi=Math.max(S.hi,2);render();setTimeout(()=>document.querySelector('.eve')?.scrollIntoView({behavior:'smooth'}),50);break;
+    case 'noeve':S.eve=null;render();break;
+    case 'addstory':{if(S.tab!=='social'){postSheet();break;}if(!S.cur)pick();S.myStory=S.cur.map(get).map(i=>({...i}));if(!S.storyToday){S.storyToday=true;S.fst=S.fst||{...FST0};Object.keys(FST0).forEach(k=>{if(POSTED[k])S.fst[k]++;});if(!S.wornToday){S.wornToday=true;S.streak++;S.journal.push(1);}}if(S.tab!=='social'){S.tab='social';S.feed='friends';}render();break;}
+    case 'mystory':storyView('me');break;
+    case 'showbuy':buySheet();break;
+    case 'attach':attachSheet();break;
+    case 'newgroup':S.gsel=[];S.gname='';newGroupSheet();break;
+    case 'sendlook':{if(!S.cur)pick();ov.innerHTML='';sendMsg(S.group,{u:'me',t:'Mon look du jour',look:S.cur.map(get).map(i=>({...i}))});break;}
+    case 'mkgroup':{const n=((document.getElementById('gname')||{}).value||'').trim()||'Nouveau groupe';const m=S.gsel||[];if(!m.length){const b=g;b.textContent='Choisis au moins un ami';break;}S.groupsX=S.groupsX||[];const id='x'+Date.now();S.groupsX.unshift({id,n,m:[...m]});S.chats=S.chats||{};S.chats[id]=[{sys:1,t:'Groupe créé. Montre ton premier achat !'}];S.gsel=[];S.gname='';ov.innerHTML='';S.tab='chat';S.group=id;render();break;}
+    case 'newgroupOld':sheet(`<h2>Créer un groupe</h2><input placeholder="Nom du groupe" aria-label="Nom du groupe" style="border:1.5px solid var(--line);border-radius:14px;padding:12px;font-size:16px"><p class="note">Ajoute des amis</p>${Object.keys(PEOPLE).filter(k=>PEOPLE[k].fr).map(k=>`<div class="frow">${avatar(k)}<span><b>${esc(PEOPLE[k].n)}</b></span><button data-addf="${k}">Ajouter</button></div>`).join('')}<button class="btn" data-close>Créer (démo)</button>`);break;
+    case 'addf':addFriendSheet();break;
+    case 'invite':{const m=document.getElementById('invmsg');try{navigator.clipboard.writeText('https://maisonfit.app/@clea').then(()=>{if(m)m.textContent='Lien copié !';},()=>{if(m)m.textContent='maisonfit.app/@clea, à copier à la main';});}catch(_){}break;}
+    case 'post':postSheet();break;
+    case 'dopost':{const pf=S.pf||{story:1,post:1};const cap=(document.getElementById('pcap')||{}).value||'';const pub=S.vis==='all';
+      if(pf.post){S.myposts=S.myposts||[];S.myposts.unshift({id:1000+S.myposts.length,u:'me',occ:OCCN[S.occ],cap,items:S.cur.map(get).map(i=>({...i})),r:[pub?14:3,pub?5:1,0],pub});}
+      if(pf.story){S.myStory=S.cur.map(get).map(i=>({...i}));if(!S.storyToday){S.storyToday=true;S.fst=S.fst||{...FST0};Object.keys(FST0).forEach(k=>{if(POSTED[k])S.fst[k]++;});if(!S.wornToday){S.wornToday=true;S.streak++;S.journal.push(1);}}}
+      if(pub){const n=3+Math.floor(Math.random()*5);S.followers=(S.followers||128)+n;S.newF=n;}
+      ov.innerHTML='';S.tab='social';S.feed=pub&&pf.post?'all':'friends';render();break;}
+    case 'pubtog':S.pub=S.pub===false?true:false;profileSheet('me');break;
+    case 'obdone':if(!S.gender){S.gender='x';S.items=wardrobeFor('x');S.cur=null;}ov.innerHTML='';pick();S.tuto=0;tutoSheet();break;
+    case 'packtrip':packTrip();render();fetchLive();break;
+    case 'tutonext':if(S.tuto<Object.keys(TABN).length-1){S.tuto++;tutoSheet();}else{S.tuto=null;S.tab='today';ov.innerHTML='';render();}break;
+    case 'tutoskip':S.tuto=null;S.tab='today';ov.innerHTML='';render();break;
+    case 'tutoagain':S.tuto=0;tutoSheet();break;
+    case 'restyle':obSheet();break;
+    case 'thumbup':{S.like=S.like||{};(S.cur||[]).forEach(id=>S.like[id]=(S.like[id]||0)+1);S.fb='Noté, on te proposera plus de looks comme ça.';render();break;}
+    case 'thumbdown':{const its=(S.cur||[]).map(get).filter(Boolean);sheet(`<h2>Qu'est-ce qui ne va pas ?</h2><p class="sub">MaisonFit apprend de ta réponse pour les prochains looks.</p><div class="olist">${[['style','Pas mon style'],['colors','Les couleurs'],['dressy','Trop habillé'],['cold','Pas assez chaud']].map(([k,n])=>`<button class="voice" data-why="${k}"><b>${n}</b></button>`).join('')}</div><p class="note">Ou une pièce en particulier</p><div class="mini">${its.map(i=>`<button class="piece" data-why="item" data-id="${i.id}"><span class="ph">${svg(i)}</span><small>${esc(i.name)}</small></button>`).join('')}</div>`);break;}
+    case 'avatar':avatarSheet();break;
+    case 'settings':notifSheet();break;
+    case 'editprof':editProfSheet();break;
+    case 'shareprof':{const m=document.getElementById('sharemsg');const u='https://maisonfit.app/@'+((S.prof&&S.prof.handle)||'clea');try{navigator.clipboard.writeText(u).then(()=>{if(m)m.textContent='Lien copié : '+u;},()=>{if(m)m.textContent=u;});}catch(_){if(m)m.textContent=u;}break;}
+    case 'newhl':sheet(`<h2>Nouvelle story à la une</h2><p class="sub">Elle commence avec ton look du jour. Tu pourras en ajouter d'autres.</p><form class="addf" id="hlform"><input id="hlname" maxlength="20" placeholder="Nom (ex. Été, Stage, Mariage)" aria-label="Nom"><button class="btn" type="submit">Créer</button></form>`);break;
+    case 'nv':S.nv=(S.nv||0)+1;render();break;
+    case 'nset':notifSheet();break;
+    case 'wxchange':changeWeather();render();break;
+    case 'adapt':daySheet(+d.i,S.chosen[+d.i]);break;
+    case 'keep':S.kept[+d.i]=1;checkAlerts();render();break;
+    case 'moreday':{const i=+d.i;S.seen=[];const o=dayOpts(i).slice().reverse();sheet(`<h2>Autres looks</h2><div class="olist">${o.map(ids=>`<button class="pick" data-choose="${i}" data-ids="${ids.join(',')}">${ids.map(id=>svg(get(id))).join('')}<span>Choisir</span></button>`).join('')}</div>`);break;}
+    case 'dirty':{const id=+d.id;S.dirty=isDirty(id)?S.dirty.filter(x=>x!==id):[...S.dirty,id];S.week=null;if((S.cur||[]).includes(id)){S.seen=[];pick();}if(S.eve&&S.eve.includes(id))evening();ov.innerHTML='';render();break;}
+    case 'reroll':if(!S.plus&&S.rerolls>=1){pay('Envie d\'une autre tenue ?');break;}S.rerolls++;pick();render();break;
+    case 'fav':if(!S.cur)break;if(!S.plus&&S.favs.length>=3){pay('Favoris illimités avec MaisonFit+');break;}if(!S.favs.some(f=>f.join()===S.cur.join()))S.favs.push([...S.cur]);g.textContent='♥ Gardée en favori';g.disabled=true;break;
+    case 'add':if(!S.plus&&S.items.length>=30){pay('Plus de 30 vêtements avec MaisonFit+');break;}addCol='blanc';addSheet();break;
+    case 'theme':if(!S.plus&&S.themes.length>=1){pay('Thèmes personnalisés illimités avec MaisonFit+');break;}themeSheet();break;
+    case 'pay':pay(d.r);break;
+    case 'buy':S.plus=true;ov.innerHTML='';render();break;
+  }
+});
+document.addEventListener('change',e=>{if(['tcity','tfrom','tto'].includes(e.target.id)){const T=S.trip,v=e.target.value;if(e.target.id==='tcity')T.city=v.trim();if(e.target.id==='tfrom'){T.from=v;if(!T.to||T.to<v)T.to=addD(v,3);}if(e.target.id==='tto')T.to=v<T.from?T.from:v;T.plan=null;T.packed=[];render();fetchLive();return;}if(e.target.id==='themecol'){S.accent=e.target.value;applyAccent();document.querySelectorAll('[data-accent]').forEach(b=>b.setAttribute('aria-pressed','false'));return;}if(e.target.id==='photoin'){const f=e.target.files&&e.target.files[0];if(!f||!S.group)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,700/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);let url;try{url=cv.toDataURL('image/jpeg',.82);}catch(_){url=r.result;}ov.innerHTML='';sendMsg(S.group,{u:'me',t:'',img:url});};im.onerror=()=>{ov.innerHTML='';};im.src=r.result;};r.readAsDataURL(f);return;}if(e.target.id==='tmp'||e.target.id==='wea'){if(e.target.id==='tmp')S.tmp=e.target.selectedIndex;else S.wea=e.target.value;S.seen=[];S.week=null;pick();if(S.eve)evening();render();}});
+document.addEventListener('submit',e=>{if(e.target.id==='profform'){e.preventDefault();S.prof={name:document.getElementById('pfname').value.trim()||'Cléa',handle:(document.getElementById('pfhandle').value.trim()||'clea').replace(/[^a-zA-Z0-9._]/g,''),bio:document.getElementById('pfbio').value.trim()};ov.innerHTML='';render();return;}
+  if(e.target.id==='hlform'){e.preventDefault();if(!S.cur)pick();seedHL();S.hl.push({n:document.getElementById('hlname').value.trim()||'Nouveau',looks:[[...S.cur]]});ov.innerHTML='';render();return;}if(e.target.id==='cmf'){e.preventDefault();const v=document.getElementById('cmin').value.trim();if(v)addComment(+e.target.dataset.id,v);return;}if(e.target.id==='svf'){e.preventDefault();const i=document.getElementById('svmsg');if(i&&i.value.trim()){i.value='';i.placeholder='Message envoyé ✓';}return;}if(e.target.id==='compf'){e.preventDefault();const v=document.getElementById('cmsg').value.trim();if(v&&S.group)sendMsg(S.group,{u:'me',t:v});return;}if(e.target.id==='thf'){e.preventDefault();const st=[...document.querySelectorAll('#thf [data-st][aria-pressed=true]')].map(b=>b.dataset.st);const t={k:'c'+Date.now(),n:document.getElementById('thn').value.trim()||'Mon thème',st:st.length?st:['casual']};S.themes.push(t);addTheme(t);S.occ=t.k;S.seen=[];pick();ov.innerHTML='';S.tab='today';render();return;}
+  if(e.target.id!=='addf')return;e.preventDefault();const [shape,cat]=document.getElementById('as').value.split('|');const st=document.getElementById('ast').value;
+  S.items.push({id:uid++,cat,shape,name:document.getElementById('an').value.trim()||'Nouveau vêtement',col:addCol,st:[st,...(st==='chic'?['casual']:[])],w:shape==='pull'||shape==='coat'?2:1,rain:shape==='boot'||shape==='coat'?1:0,worn:0});
+  ov.innerHTML='';S.tab='wardrobe';S.filter='all';render();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){ov.innerHTML='';render();}});
+const start=d=>{S=(d&&d.items&&d.wthemes&&d.chosen)?d:fresh();if(S.hi==null)S.hi=0;if(!S.themes)S.themes=[];S.themes.forEach(addTheme);if(!OCC[S.occ])S.occ='cours';if(S.items.length&&S.items.some(i=>i.id>=uid))uid=Math.max(...S.items.map(i=>i.id))+1;render();applyAccent();if(!S.gender)obSheet();};
+window.claude?.hot?.snapshot?.(()=>S);
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+}
+</script>
+</body>
+</html>
